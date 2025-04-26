@@ -752,7 +752,7 @@ class CalendarView(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Advanced Notes")
+        self.setWindowTitle("Securonis Notes")
         self.setGeometry(100, 100, 1200, 800)
         
         # Initialize note storage
@@ -1353,9 +1353,9 @@ class MainWindow(QMainWindow):
                 
     def show_about(self):
         QMessageBox.about(self, "About Advanced Notes",
-                         "Advanced Notes v1.0\n\n"
-                         "A modern and feature-rich note-taking application.\n"
-                         "Created with PyQt5.")
+                         "Securonis Notes v1.8\n\n"
+                         "A modern note-taking application.\n"
+                         "Developed by root0emir")
                          
     def choose_color(self):
         color = QColorDialog.getColor()
