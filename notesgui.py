@@ -128,8 +128,7 @@ class CategoryManager(QDialog):
         """)
         
         layout = QVBoxLayout()
-        
-        # Mevcut kategoriler listesi
+
         category_label = QLabel("Current Categories:")
         category_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         layout.addWidget(category_label)
@@ -157,7 +156,6 @@ class CategoryManager(QDialog):
         """)
         layout.addWidget(self.category_list)
         
-        # Kategori ekleme alanı
         add_layout = QHBoxLayout()
         self.new_category = QLineEdit()
         self.new_category.setPlaceholderText("Add new category...")
@@ -181,19 +179,19 @@ class CategoryManager(QDialog):
         add_layout.addWidget(add_button)
         layout.addLayout(add_layout)
         
-        # Kategori silme düğmesi
+    
         delete_button = ModernButton("Delete Selected")
         delete_button.clicked.connect(self.delete_category)
         layout.addWidget(delete_button)
         
-        # Kapat düğmesi
+       
         close_button = ModernButton("Close")
         close_button.clicked.connect(self.accept)
         layout.addWidget(close_button)
         
         self.setLayout(layout)
         
-        # Kategori listesini doldur
+  
         self.update_category_list()
         
     def update_category_list(self):
@@ -237,7 +235,7 @@ class TagManager(QDialog):
         
         layout = QVBoxLayout()
         
-        # Mevcut etiketler listesi
+ 
         tag_label = QLabel("Current Tags:")
         tag_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         layout.addWidget(tag_label)
@@ -265,7 +263,7 @@ class TagManager(QDialog):
         """)
         layout.addWidget(self.tag_list)
         
-        # Etiket ekleme alanı
+
         add_layout = QHBoxLayout()
         self.new_tag = QLineEdit()
         self.new_tag.setPlaceholderText("Add new tag...")
@@ -289,19 +287,19 @@ class TagManager(QDialog):
         add_layout.addWidget(add_button)
         layout.addLayout(add_layout)
         
-        # Etiket silme düğmesi
+
         delete_button = ModernButton("Delete Selected")
         delete_button.clicked.connect(self.delete_tag)
         layout.addWidget(delete_button)
         
-        # Kapat düğmesi
+
         close_button = ModernButton("Close")
         close_button.clicked.connect(self.accept)
         layout.addWidget(close_button)
         
         self.setLayout(layout)
         
-        # Etiket listesini doldur
+  
         self.update_tag_list()
         
     def update_tag_list(self):
@@ -357,15 +355,14 @@ class Note:
                 self.created_at == other.created_at)
         
     def add_attachment(self, file_path):
-        # Dosya eki ekleme fonksiyonu
+      
         file_name = os.path.basename(file_path)
         
-        # Dosya boyutu kontrolü (10MB limit)
         file_size = os.path.getsize(file_path)
-        if file_size > 10 * 1024 * 1024:  # 10MB
+        if file_size > 10 * 1024 * 1024:  
             raise ValueError("File size exceeds the 10MB limit.")
             
-        # Uzantı kontrolü
+   
         allowed_extensions = ['.txt', '.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif']
         file_extension = os.path.splitext(file_name)[1].lower()
         if file_extension not in allowed_extensions:
@@ -374,11 +371,10 @@ class Note:
         try:
             with open(file_path, 'rb') as file:
                 file_content = file.read()
-                # Base64 encoding
+      
                 import base64
                 encoded_content = base64.b64encode(file_content).decode('utf-8')
                 
-                # Dosya sayısı sınırlaması (10 adet)
                 if len(self.attachments) >= 10:
                     raise ValueError("Maximum 10 attachments allowed per note.")
                     
@@ -425,14 +421,14 @@ class Note:
         
     @classmethod
     def from_dict(cls, data):
-        # Sözlükten Note nesnesi oluştur
+
         note = cls()
         note.title = data.get('title', '')
         note.content = data.get('content', '')
         note.tags = data.get('tags', [])
         note.priority = data.get('priority', 'low')
         
-        # Tarih alanlarını daha güvenli şekilde işleyelim
+    
         try:
             note.due_date = datetime.fromisoformat(data.get('due_date', datetime.now().isoformat()))
         except (ValueError, TypeError):
@@ -455,7 +451,7 @@ class Note:
         note.is_encrypted = data.get('is_encrypted', False)
         note.attachments = data.get('attachments', [])
         
-        # Hatırlatıcı alanını güvenli şekilde işleyelim
+ 
         reminder_str = data.get('reminder')
         if reminder_str:
             try:
@@ -470,8 +466,8 @@ class Note:
         return note
 
 class NoteEditor(QWidget):
-    reminder_changed = pyqtSignal(int)  # Hatırlatıcı değişiklik sinyali
-    attachment_changed = pyqtSignal(int)  # Ek değişiklik sinyali
+    reminder_changed = pyqtSignal(int)  
+    attachment_changed = pyqtSignal(int)  
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -482,7 +478,7 @@ class NoteEditor(QWidget):
         layout.setSpacing(10)
         layout.setContentsMargins(10, 10, 10, 10)
         
-        # Başlık (modern stil)
+
         title_label = QLabel("Title:")
         title_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.title_edit = QLineEdit()
@@ -505,7 +501,7 @@ class NoteEditor(QWidget):
         layout.addWidget(title_label)
         layout.addWidget(self.title_edit)
         
-        # İçerik (zengin metin desteği)
+
         content_label = QLabel("Content:")
         content_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.content_edit = QTextEdit()
@@ -527,13 +523,13 @@ class NoteEditor(QWidget):
         layout.addWidget(content_label)
         layout.addWidget(self.content_edit)
         
-        # Alt panel (metadata ve ayarlar)
+
         bottom_layout = QHBoxLayout()
         
-        # Sol alt panel (etiketler, öncelik, kategori)
+
         left_panel = QVBoxLayout()
         
-        # Etiketler
+   
         tags_label = QLabel("Tags:")
         tags_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.tags_edit = QLineEdit()
@@ -555,7 +551,7 @@ class NoteEditor(QWidget):
         left_panel.addWidget(tags_label)
         left_panel.addWidget(self.tags_edit)
         
-        # Öncelik
+
         priority_label = QLabel("Priority:")
         priority_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.priority_combo = QComboBox()
@@ -590,7 +586,7 @@ class NoteEditor(QWidget):
         left_panel.addWidget(priority_label)
         left_panel.addWidget(self.priority_combo)
         
-        # Kategori
+
         category_label = QLabel("Category:")
         category_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.category_combo = QComboBox()
@@ -625,10 +621,10 @@ class NoteEditor(QWidget):
         left_panel.addWidget(category_label)
         left_panel.addWidget(self.category_combo)
         
-        # Sağ alt panel (tarih, onay kutuları)
+    
         right_panel = QVBoxLayout()
         
-        # Son tarih
+
         due_date_label = QLabel("Due Date:")
         due_date_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.due_date_edit = QLineEdit()
@@ -656,42 +652,41 @@ class NoteEditor(QWidget):
         right_panel.addWidget(due_date_label)
         right_panel.addLayout(due_date_layout)
         
-        # Onay kutuları grubu
+  
         check_label = QLabel("Options:")
         check_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         right_panel.addWidget(check_label)
         
-        # Şifreleme onay kutusu
+
         self.encrypt_check = ModernCheckBox("Encrypt")
         right_panel.addWidget(self.encrypt_check)
         
-        # Favori onay kutusu
+
         self.favorite_check = ModernCheckBox("Favorite")
         right_panel.addWidget(self.favorite_check)
         
-        # Arşivleme onay kutusu
+
         self.archive_check = ModernCheckBox("Archive")
         right_panel.addWidget(self.archive_check)
         
-        # Hatırlatıcı onay kutusu
+
         self.reminder_check = ModernCheckBox("Set Reminder")
         self.reminder_check.stateChanged.connect(self.on_reminder_changed)
         right_panel.addWidget(self.reminder_check)
         
-        # Ek onay kutusu
+
         self.attachment_check = ModernCheckBox("Attachments")
         self.attachment_check.stateChanged.connect(self.on_attachment_changed)
         right_panel.addWidget(self.attachment_check)
-        
-        # Alt panelleri düzene ekle
+
         bottom_layout.addLayout(left_panel)
         bottom_layout.addLayout(right_panel)
         layout.addLayout(bottom_layout)
         
-        # Düğme satırı
+
         button_layout = QHBoxLayout()
         
-        # Kaydet düğmesi
+
         save_button = ModernButton("Save")
         save_button.setStyleSheet("""
             QPushButton {
@@ -713,17 +708,17 @@ class NoteEditor(QWidget):
         save_button.clicked.connect(self.save_note)
         button_layout.addWidget(save_button)
         
-        # Temizle düğmesi
+  
         clear_button = ModernButton("Clear Form")
         clear_button.clicked.connect(self.clear_form)
         button_layout.addWidget(clear_button)
         
-        # Renk seçme düğmesi
+
         color_button = ModernButton("Text Color")
         color_button.clicked.connect(self.choose_color)
         button_layout.addWidget(color_button)
         
-        # Yazı tipi seçme düğmesi
+      
         font_button = ModernButton("Text Font")
         font_button.clicked.connect(self.choose_font)
         button_layout.addWidget(font_button)
@@ -790,7 +785,7 @@ class NoteEditor(QWidget):
         return parent
 
     def show_calendar(self):
-        # Takvim widget'ı ile tarih seçme dialogu açma
+ 
         dialog = QDialog(self)
         dialog.setWindowTitle("Select Date")
         dialog.setGeometry(300, 300, 400, 400)
@@ -898,7 +893,7 @@ class NoteList(QWidget):
         layout.setSpacing(10)
         layout.setContentsMargins(10, 10, 10, 10)
         
-        # Search with modern styling
+  
         search_layout = QHBoxLayout()
         search_label = QLabel("Search:")
         search_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
@@ -921,7 +916,7 @@ class NoteList(QWidget):
         search_layout.addWidget(self.search_edit)
         layout.addLayout(search_layout)
         
-        # Filters with modern styling
+
         filter_layout = QHBoxLayout()
         
         self.priority_filter = QComboBox()
@@ -1147,7 +1142,7 @@ class MainWindow(QMainWindow):
         self.notes = []
         self.current_note = None
         
-        # Uygulama özellikleri için try-except blokları
+
         try:
             self.load_encryption_key()
         except Exception as e:
@@ -1188,7 +1183,7 @@ class MainWindow(QMainWindow):
         # Create left panel (note list)
         left_panel = QVBoxLayout()
         
-        # Arama özelliği için arama kutusu ekleyelim
+    
         search_layout = QHBoxLayout()
         search_label = QLabel("Search:")
         search_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
@@ -1212,7 +1207,7 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(self.search_edit)
         left_panel.addLayout(search_layout)
         
-        # Etiket filtreleme için combobox ekleyelim
+ 
         tag_filter_layout = QHBoxLayout()
         tag_filter_label = QLabel("Filter by tag:")
         tag_filter_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
@@ -1248,7 +1243,7 @@ class MainWindow(QMainWindow):
         tag_filter_layout.addWidget(self.tag_filter_combo)
         left_panel.addLayout(tag_filter_layout)
         
-        # Not listesi
+
         self.note_list = NoteList()
         left_panel.addWidget(self.note_list)
         
@@ -1275,7 +1270,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 1200, 800)
         self.setWindowIcon(QIcon("icon.png"))
         
-        # Statü çubuğu
+
         self.statusBar().setStyleSheet("background-color: #1d1d1d; color: white;")
         
         # Setup menu and toolbar
@@ -1388,7 +1383,7 @@ class MainWindow(QMainWindow):
         
         edit_menu.addSeparator()
         
-        # Kategori ve Etiket Yönetim Menüsü
+
         manage_menu = menubar.addMenu("&Manage")
         manage_menu.setStyleSheet("""
             QMenu {
@@ -1630,21 +1625,21 @@ class MainWindow(QMainWindow):
                         f"Attached file: {os.path.basename(file_path)}\n\nTotal attachments: {len(attached_files)}"
                     )
                     
-                    # Not durumunu güncelle
+             
                     self.update_editor()
                     self.save_notes()
                 except ValueError as e:
-                    # Doğrulama hataları
+        
                     QMessageBox.warning(self, "Attachment Error", str(e))
                     self.note_editor.attachment_check.setChecked(False)
                 except Exception as e:
-                    # Diğer hatalar
+      
                     QMessageBox.critical(self, "Error", f"Error adding attachment: {str(e)}")
                     self.note_editor.attachment_check.setChecked(False)
         else:
-            # Ek yönetimi
+
             if self.current_note.attachments:
-                # Dosya listesi
+           
                 attachment_names = [att['name'] for att in self.current_note.attachments]
                 file_name, ok = QInputDialog.getItem(
                     self, 
@@ -1656,7 +1651,7 @@ class MainWindow(QMainWindow):
                 )
                 
                 if ok and file_name:
-                    # Seçenek menüsü
+       
                     action, ok = QInputDialog.getItem(
                         self, 
                         "Attachment Options", 
@@ -1668,7 +1663,7 @@ class MainWindow(QMainWindow):
                     
                     if ok:
                         if action == "View/Open":
-                            # Dosyayı geçici olarak kaydet ve aç
+                   
                             attachment_content = None
                             for att in self.current_note.attachments:
                                 if att['name'] == file_name:
@@ -1681,14 +1676,14 @@ class MainWindow(QMainWindow):
                                 import subprocess
                                 import platform
                                 
-                                # Geçici dosya oluştur
+                    
                                 temp_dir = tempfile.gettempdir()
                                 temp_file_path = os.path.join(temp_dir, file_name)
                                 
                                 with open(temp_file_path, 'wb') as f:
                                     f.write(base64.b64decode(attachment_content))
                                 
-                                # Dosyayı aç
+                      
                                 if platform.system() == 'Windows':
                                     os.startfile(temp_file_path)
                                 elif platform.system() == 'Darwin':  # macOS
@@ -1697,7 +1692,7 @@ class MainWindow(QMainWindow):
                                     subprocess.call(['xdg-open', temp_file_path])
                         
                         elif action == "Save to disk":
-                            # Dosyayı kaydet
+          
                             save_path, _ = QFileDialog.getSaveFileName(
                                 self, 
                                 "Save Attachment", 
@@ -1723,7 +1718,7 @@ class MainWindow(QMainWindow):
                                     )
                         
                         elif action == "Delete":
-                            # Dosyayı sil
+              
                             reply = QMessageBox.question(
                                 self, 
                                 "Confirm Delete", 
@@ -1743,11 +1738,11 @@ class MainWindow(QMainWindow):
                                     f"Attachment {file_name} deleted."
                                 )
                                 
-                                # Not durumunu güncelle
+                         
                                 self.update_editor()
                                 self.save_notes()
                 
-                # Checkbox durumunu güncelle
+    
                 self.note_editor.attachment_check.setChecked(len(self.current_note.attachments) > 0)
             else:
                 QMessageBox.information(
@@ -1758,54 +1753,54 @@ class MainWindow(QMainWindow):
                 self.note_editor.attachment_check.setChecked(False)
         
     def toggle_favorites(self):
-        # Favoriler filtresini değiştir
+
         if hasattr(self, 'show_favorites_action'):
             self.show_favorites_action.setChecked(not self.show_favorites_action.isChecked())
         self.filter_notes()
         
     def toggle_archived(self):
-        # Arşiv filtresini değiştir
+
         if hasattr(self, 'show_archived_action'):
             self.show_archived_action.setChecked(not self.show_archived_action.isChecked())
         self.filter_notes()
         
     def filter_notes(self):
-        # Notları filtrele (arama ve etiket filtreleri)
+
         search_text = self.search_edit.text().lower() if hasattr(self, 'search_edit') else ""
         selected_tag = self.tag_filter_combo.currentText() if hasattr(self, 'tag_filter_combo') else "All Tags"
         
-        # Favoriler, arşiv ve şifreleme filtreleri
+
         show_favorites = self.show_favorites_action.isChecked() if hasattr(self, 'show_favorites_action') else False
         show_archived = self.show_archived_action.isChecked() if hasattr(self, 'show_archived_action') else False
         show_encrypted = self.show_encrypted_action.isChecked() if hasattr(self, 'show_encrypted_action') else False
         
-        # Not listesini temizle
+
         self.note_list.note_list.clear()
         
-        # Filtrelemeleri uygula
+
         for note in self.notes:
-            # Arama filtresi
+       
             title_match = search_text in note.title.lower()
             content_match = search_text in note.content.lower()
             tags_match = any(search_text in tag.lower() for tag in note.tags)
             search_match = title_match or content_match or tags_match
             
-            # Etiket filtresi
+      
             tag_match = (selected_tag == "All Tags" or selected_tag in note.tags)
                 
-            # Diğer filtreler
+
             favorite_match = (not show_favorites or note.is_favorite)
             archived_match = (not show_archived or note.is_archived)
             encrypted_match = (not show_encrypted or note.is_encrypted)
             
-            # Tüm filtreler eşleşiyorsa, not listesine ekle
+    
             if (search_match and tag_match and favorite_match and
                 archived_match and encrypted_match):
                 item = QListWidgetItem(note.title)
                 item.setData(Qt.UserRole, note)
                 self.note_list.note_list.addItem(item)
         
-        # İstatistikleri güncelle
+   
         self.note_list.update_statistics(self.notes)
         
     def new_note(self):
@@ -1816,7 +1811,7 @@ class MainWindow(QMainWindow):
         if not self.current_note:
             self.current_note = Note()
             
-        # Veri doğrulama
+
         title = self.note_editor.title_edit.text().strip()
         if not title:
             QMessageBox.warning(self, "Validation Error", "Title cannot be empty.")
@@ -1829,7 +1824,7 @@ class MainWindow(QMainWindow):
             self.note_editor.content_edit.setFocus()
             return
             
-        # Tarih formatı doğrulama
+     
         due_date_str = self.note_editor.due_date_edit.text()
         try:
             due_date = datetime.strptime(due_date_str, "%Y-%m-%d %H:%M")
@@ -1838,7 +1833,7 @@ class MainWindow(QMainWindow):
             self.note_editor.due_date_edit.setFocus()
             return
             
-        # Update note data from editor
+
         self.current_note.title = title
         self.current_note.content = content
         self.current_note.tags = [tag.strip() for tag in self.note_editor.tags_edit.text().split(",") if tag.strip()]
@@ -1855,7 +1850,7 @@ class MainWindow(QMainWindow):
             self.notes.append(self.current_note)
             
         self.update_note_list()
-        self.update_tag_filter()  # Etiket filtresini güncelle
+        self.update_tag_filter()  
         self.save_notes()
         
         QMessageBox.information(self, "Success", "Note saved successfully!")
@@ -2095,7 +2090,6 @@ class MainWindow(QMainWindow):
         if not self.current_note:
             return
             
-        # Şifreleme anahtarı kontrolü
         if not self.encryption_key:
             QMessageBox.warning(self, "Warning", 
                               "Encryption key not available. Please restart the application and enter the correct password.")
@@ -2125,9 +2119,9 @@ class MainWindow(QMainWindow):
     def load_encryption_key(self):
         key_file = 'encryption_key.key'
         
-        # Şifreleme anahtarı varsa
+
         if os.path.exists(key_file):
-            # Şifre iste
+   
             password, ok = QInputDialog.getText(
                 self, "Enter Password", 
                 "Enter encryption password:", 
@@ -2135,30 +2129,29 @@ class MainWindow(QMainWindow):
             )
             
             if not ok:
-                # Kullanıcı iptal etti
                 QMessageBox.warning(self, "Warning", 
                                    "Encryption key not loaded. Some features may not work.")
                 self.encryption_key = None
                 return
             
             try:
-                # Dosyadan anahtarı yükle
+            
                 with open(key_file, 'rb') as file:
                     encrypted_key = file.read()
                 
-                # Anahtarı çöz
+     
                 import hashlib
-                # Hashle şifreyi 32 byte'lık (Fernet için uygun) bir anahtara dönüştür
+              
                 key_from_password = hashlib.sha256(password.encode()).digest()
                 f = Fernet(Fernet.generate_key())
-                # Base64 çözme
+           
                 import base64
                 key_bytes = base64.urlsafe_b64decode(encrypted_key)
                 
-                # XOR ile anahtarı çöz (basit şifreleme)
+        
                 decrypted_key = bytes(a ^ b for a, b in zip(key_bytes, key_from_password))
                 
-                # Geçerli bir Fernet anahtarı mı kontrol et
+        
                 try:
                     Fernet(decrypted_key)
                     self.encryption_key = decrypted_key
@@ -2169,8 +2162,6 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Error", f"Error loading encryption key: {str(e)}")
                 self.encryption_key = None
         else:
-            # İlk kullanım - yeni anahtar oluştur
-            # Şifre iste
             while True:
                 password, ok = QInputDialog.getText(
                     self, "Create Password", 
@@ -2179,13 +2170,12 @@ class MainWindow(QMainWindow):
                 )
                 
                 if not ok:
-                    # Kullanıcı iptal etti - varsayılan şifreleme yöntemi kullan
+            
                     self.encryption_key = Fernet.generate_key()
                     QMessageBox.warning(self, "Warning", 
                                        "Using default encryption. Notes will not be securely encrypted.")
                     break
-                
-                # Şifre doğrulama
+
                 if len(password) < 8:
                     QMessageBox.warning(self, "Warning", "Password must be at least 8 characters.")
                     continue
@@ -2200,19 +2190,19 @@ class MainWindow(QMainWindow):
                     QMessageBox.warning(self, "Warning", "Passwords don't match. Try again.")
                     continue
                 
-                # Şifre onaylandı, anahtar oluştur
+  
                 self.encryption_key = Fernet.generate_key()
                 
-                # Anahtarı şifrele ve kaydet
+
                 import hashlib
-                # Hashle şifreyi 32 byte'lık bir anahtara dönüştür
+ 
                 key_from_password = hashlib.sha256(password.encode()).digest()
                 
-                # XOR ile anahtarı şifrele (basit şifreleme)
+      
                 key_bytes = base64.urlsafe_b64decode(self.encryption_key)
                 encrypted_key = bytes(a ^ b for a, b in zip(key_bytes, key_from_password))
                 
-                # Base64 kodla ve kaydet
+        
                 with open(key_file, 'wb') as file:
                     file.write(base64.urlsafe_b64encode(encrypted_key))
                 
@@ -2221,14 +2211,14 @@ class MainWindow(QMainWindow):
                 break
                 
     def check_reminders(self):
-        # Hatırlatıcıları kontrol et
+
         current_time = datetime.now()
         for note in self.notes:
             if note.reminder and note.reminder <= current_time:
-                # Hatırlatıcı zamanı geldi
+     
                 QMessageBox.information(self, "Hatırlatıcı", 
                                        f"Not: {note.title}\n\n{note.content}")
-                # Hatırlatıcıyı temizle
+       
                 note.reminder = None
                 self.save_notes()
         
@@ -2239,8 +2229,8 @@ class MainWindow(QMainWindow):
                     notes_data = json.load(file)
                     self.notes = [Note.from_dict(data) for data in notes_data]
                 self.update_note_list()
-                self.update_tag_filter()  # Etiket filtresini güncelle
-                self.update_category_combo()  # Kategori combobox'ını güncelle
+                self.update_tag_filter()  
+                self.update_category_combo()
                 self.statusBar().showMessage(f"{len(self.notes)} notes loaded.")
             else:
                 self.statusBar().showMessage("Note file not found. You can create new notes.")
@@ -2259,19 +2249,19 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         try:
             self.save_notes()
-            # Açık olan veri bağlantılarını kapat
+
             if hasattr(self, 'reminder_timer'):
                 self.reminder_timer.stop()
             event.accept()
         except Exception as e:
-            # Hata olursa günlüğe yaz
+     
             with open('error.log', 'a') as f:
                 import datetime
                 f.write(f"\n[{datetime.datetime.now()}] Error during close: {str(e)}\n")
-            event.accept()  # Her durumda kapanmaya izin ver
+            event.accept()  
 
     def add_note(self, note):
-        # Yeni not ekle
+  
         self.notes.append(note)
         self.current_note = note
         self.update_note_list()
@@ -2279,42 +2269,41 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Note added: {note.title}")
 
     def update_tag_filter(self):
-        # Etiket filtreleme combobox'ını güncelle
+
         current_tag = self.tag_filter_combo.currentText()
         self.tag_filter_combo.clear()
         self.tag_filter_combo.addItem("All Tags")
         
-        # Tüm notların etiketlerini topla
+   
         all_tags = set()
         for note in self.notes:
             all_tags.update(note.tags)
         
-        # Etiketleri alfabetik sırala ve combobox'a ekle
+ 
         for tag in sorted(all_tags):
             self.tag_filter_combo.addItem(tag)
             
-        # Önceki seçimi geri al (mümkünse)
+   
         index = self.tag_filter_combo.findText(current_tag)
         if index >= 0:
             self.tag_filter_combo.setCurrentIndex(index)
 
     def manage_categories(self):
-        # Varolan tüm kategorileri al
         all_categories = set()
         for note in self.notes:
             all_categories.add(note.category)
         
-        # Kategori yöneticisini göster
+
         dialog = CategoryManager(self, list(all_categories))
         if dialog.exec_() == QDialog.Accepted:
-            # Güncellenmiş kategorileri al
+
             updated_categories = dialog.get_categories()
             
-            # Kategori değişiklikleri uygulanmalı
+  
             category_map = {}
             for old_cat in all_categories:
                 if old_cat not in updated_categories:
-                    # Kategorinin yeni adını sor
+  
                     new_cat, ok = QInputDialog.getItem(
                         self, "Update Category", 
                         f"Category '{old_cat}' was removed. Map notes to:",
@@ -2323,60 +2312,60 @@ class MainWindow(QMainWindow):
                     if ok:
                         category_map[old_cat] = new_cat
                     else:
-                        category_map[old_cat] = "general"  # Varsayılan
+                        category_map[old_cat] = "general"  
             
-            # Notları güncelle
+       
             for note in self.notes:
                 if note.category in category_map:
                     note.category = category_map[note.category]
             
-            # Not editörünün kategori listesini güncelle
+   
             self.note_editor.category_combo.clear()
             for category in sorted(updated_categories):
                 self.note_editor.category_combo.addItem(category)
             
-            # Not listesini güncelle
+    
             self.update_note_list()
             self.save_notes()
     
     def manage_tags(self):
-        # Varolan tüm etiketleri al
+
         all_tags = set()
         for note in self.notes:
             all_tags.update(note.tags)
         
-        # Etiket yöneticisini göster
+
         dialog = TagManager(self, list(all_tags))
         if dialog.exec_() == QDialog.Accepted:
-            # Güncellenmiş etiketleri al
+    
             updated_tags = dialog.get_tags()
             
-            # Etiket filtresini güncelle
+           
             self.update_tag_filter()
 
     def update_category_combo(self):
-        # Not editörünün kategori combobox'ını güncelle
+
         categories = set()
-        categories.add("general")  # Varsayılan kategori her zaman olsun
+        categories.add("general")  
         categories.add("work")
         categories.add("personal")
         categories.add("ideas")
         categories.add("tasks")
         
-        # Mevcut notlardan kategori ekle
+  
         for note in self.notes:
             if note.category:
                 categories.add(note.category)
                 
-        # Combobox'ı güncelle
+
         current_category = self.note_editor.category_combo.currentText()
         self.note_editor.category_combo.clear()
         
-        # Alfabetik sırala ve ekle
+
         for category in sorted(categories):
             self.note_editor.category_combo.addItem(category)
             
-        # Eğer önceki seçim varsa, tekrar seç
+
         index = self.note_editor.category_combo.findText(current_category)
         if index >= 0:
             self.note_editor.category_combo.setCurrentIndex(index)
@@ -2388,8 +2377,8 @@ class MainWindow(QMainWindow):
                     notes_data = json.load(file)
                     self.notes = [Note.from_dict(data) for data in notes_data]
                 self.update_note_list()
-                self.update_tag_filter()  # Etiket filtresini güncelle
-                self.update_category_combo()  # Kategori combobox'ını güncelle
+                self.update_tag_filter()  
+                self.update_category_combo()  
                 self.statusBar().showMessage(f"{len(self.notes)} notes loaded.")
             else:
                 self.statusBar().showMessage("Note file not found. You can create new notes.")
@@ -2397,17 +2386,17 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"Error loading notes: {str(e)}")
 
 def handle_exception(exctype, value, traceback):
-    # Global hata yakalama fonksiyonu
+
     error_message = f"{exctype.__name__}: {value}"
     print(f"Error occurred: {error_message}")
     
-    # Ana pencereyi bul
+
     app = QApplication.instance()
     for widget in app.topLevelWidgets():
         if isinstance(widget, QMainWindow):
             QMessageBox.critical(widget, "Error", 
                                f"An unexpected error occurred:\n\n{error_message}\n\nThe application will try to continue.")
-            # Hatayı kaydet
+       
             try:
                 with open('error.log', 'a') as f:
                     import datetime
@@ -2423,7 +2412,6 @@ def handle_exception(exctype, value, traceback):
 def main():
     app = QApplication(sys.argv)
     
-    # Global hata yakalayıcıyı kur
     sys.excepthook = handle_exception
     
     # Set application style
@@ -2446,7 +2434,7 @@ def main():
     palette.setColor(QPalette.HighlightedText, Qt.black)
     app.setPalette(palette)
     
-    # Set application font
+
     app.setFont(QFont("Segoe UI", 9))
     
     try:
@@ -2454,10 +2442,10 @@ def main():
         window.show()
         sys.exit(app.exec_())
     except Exception as e:
-        # Ana hata yakalama
+ 
         QMessageBox.critical(None, "Critical Error", 
                            f"A critical error occurred during startup:\n\n{str(e)}\n\nThe application will now exit.")
-        # Hatayı kaydet
+
         try:
             with open('critical_error.log', 'a') as f:
                 import datetime
