@@ -18,7 +18,7 @@ from PyQt5.QtCore import Qt, QSize, QTimer, QDateTime, QPropertyAnimation, QEasi
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette, QTextCharFormat, QLinearGradient, QPainter
 from cryptography.fernet import Fernet
 
-# Securonis Notes GUI Developed by root0emir Version 2.0 
+# Securonis Notes GUI Developed by root0emir Version 2.5
 
 class ModernCheckBox(QCheckBox):
     def __init__(self, text, parent=None):
@@ -111,6 +111,222 @@ class ModernButton(QPushButton):
         self.animation.setEndValue(self.geometry().adjusted(2, 2, -2, -2))
         self.animation.start()
 
+class CategoryManager(QDialog):
+    def __init__(self, parent=None, categories=None):
+        super().__init__(parent)
+        self.categories = categories or []
+        self.setup_ui()
+        
+    def setup_ui(self):
+        self.setWindowTitle("Category Manager")
+        self.setGeometry(300, 300, 400, 500)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #1d1d1d;
+                color: white;
+            }
+        """)
+        
+        layout = QVBoxLayout()
+        
+        # Mevcut kategoriler listesi
+        category_label = QLabel("Current Categories:")
+        category_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
+        layout.addWidget(category_label)
+        
+        self.category_list = QListWidget()
+        self.category_list.setStyleSheet("""
+            QListWidget {
+                background-color: #2d2d2d;
+                color: white;
+                border: 1px solid #3d3d3d;
+                border-radius: 4px;
+                padding: 5px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-radius: 4px;
+            }
+            QListWidget::item:selected {
+                background-color: #4d4d4d;
+                color: white;
+            }
+            QListWidget::item:hover {
+                background-color: #3d3d3d;
+            }
+        """)
+        layout.addWidget(self.category_list)
+        
+        # Kategori ekleme alanı
+        add_layout = QHBoxLayout()
+        self.new_category = QLineEdit()
+        self.new_category.setPlaceholderText("Add new category...")
+        self.new_category.setStyleSheet("""
+            QLineEdit {
+                background-color: #2d2d2d;
+                color: white;
+                border: 1px solid #3d3d3d;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #4d4d4d;
+            }
+        """)
+        
+        add_button = ModernButton("Add")
+        add_button.clicked.connect(self.add_category)
+        add_layout.addWidget(self.new_category)
+        add_layout.addWidget(add_button)
+        layout.addLayout(add_layout)
+        
+        # Kategori silme düğmesi
+        delete_button = ModernButton("Delete Selected")
+        delete_button.clicked.connect(self.delete_category)
+        layout.addWidget(delete_button)
+        
+        # Kapat düğmesi
+        close_button = ModernButton("Close")
+        close_button.clicked.connect(self.accept)
+        layout.addWidget(close_button)
+        
+        self.setLayout(layout)
+        
+        # Kategori listesini doldur
+        self.update_category_list()
+        
+    def update_category_list(self):
+        self.category_list.clear()
+        for category in sorted(self.categories):
+            self.category_list.addItem(category)
+            
+    def add_category(self):
+        category = self.new_category.text().strip()
+        if category and category not in self.categories:
+            self.categories.append(category)
+            self.update_category_list()
+            self.new_category.clear()
+            
+    def delete_category(self):
+        selected_items = self.category_list.selectedItems()
+        if selected_items:
+            category = selected_items[0].text()
+            if category in self.categories:
+                self.categories.remove(category)
+                self.update_category_list()
+                
+    def get_categories(self):
+        return self.categories
+
+class TagManager(QDialog):
+    def __init__(self, parent=None, tags=None):
+        super().__init__(parent)
+        self.tags = tags or []
+        self.setup_ui()
+        
+    def setup_ui(self):
+        self.setWindowTitle("Tag Manager")
+        self.setGeometry(300, 300, 400, 500)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #1d1d1d;
+                color: white;
+            }
+        """)
+        
+        layout = QVBoxLayout()
+        
+        # Mevcut etiketler listesi
+        tag_label = QLabel("Current Tags:")
+        tag_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
+        layout.addWidget(tag_label)
+        
+        self.tag_list = QListWidget()
+        self.tag_list.setStyleSheet("""
+            QListWidget {
+                background-color: #2d2d2d;
+                color: white;
+                border: 1px solid #3d3d3d;
+                border-radius: 4px;
+                padding: 5px;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-radius: 4px;
+            }
+            QListWidget::item:selected {
+                background-color: #4d4d4d;
+                color: white;
+            }
+            QListWidget::item:hover {
+                background-color: #3d3d3d;
+            }
+        """)
+        layout.addWidget(self.tag_list)
+        
+        # Etiket ekleme alanı
+        add_layout = QHBoxLayout()
+        self.new_tag = QLineEdit()
+        self.new_tag.setPlaceholderText("Add new tag...")
+        self.new_tag.setStyleSheet("""
+            QLineEdit {
+                background-color: #2d2d2d;
+                color: white;8
+                border: 1px solid #3d3d3d;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #4d4d4d;
+            }
+        """)
+        
+        add_button = ModernButton("Add")
+        add_button.clicked.connect(self.add_tag)
+        add_layout.addWidget(self.new_tag)
+        add_layout.addWidget(add_button)
+        layout.addLayout(add_layout)
+        
+        # Etiket silme düğmesi
+        delete_button = ModernButton("Delete Selected")
+        delete_button.clicked.connect(self.delete_tag)
+        layout.addWidget(delete_button)
+        
+        # Kapat düğmesi
+        close_button = ModernButton("Close")
+        close_button.clicked.connect(self.accept)
+        layout.addWidget(close_button)
+        
+        self.setLayout(layout)
+        
+        # Etiket listesini doldur
+        self.update_tag_list()
+        
+    def update_tag_list(self):
+        self.tag_list.clear()
+        for tag in sorted(self.tags):
+            self.tag_list.addItem(tag)
+            
+    def add_tag(self):
+        tag = self.new_tag.text().strip()
+        if tag and tag not in self.tags:
+            self.tags.append(tag)
+            self.update_tag_list()
+            self.new_tag.clear()
+            
+    def delete_tag(self):
+        selected_items = self.tag_list.selectedItems()
+        if selected_items:
+            tag = selected_items[0].text()
+            if tag in self.tags:
+                self.tags.remove(tag)
+                self.update_tag_list()
+                
+    def get_tags(self):
+        return self.tags
+
 class Note:
     def __init__(self, title="", content="", tags=None, priority="low",
                  due_date=None, category="general", color="#ffffff",
@@ -141,22 +357,42 @@ class Note:
                 self.created_at == other.created_at)
         
     def add_attachment(self, file_path):
-  
+        # Dosya eki ekleme fonksiyonu
         file_name = os.path.basename(file_path)
+        
+        # Dosya boyutu kontrolü (10MB limit)
+        file_size = os.path.getsize(file_path)
+        if file_size > 10 * 1024 * 1024:  # 10MB
+            raise ValueError("File size exceeds the 10MB limit.")
+            
+        # Uzantı kontrolü
+        allowed_extensions = ['.txt', '.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif']
+        file_extension = os.path.splitext(file_name)[1].lower()
+        if file_extension not in allowed_extensions:
+            raise ValueError(f"File type {file_extension} is not allowed.")
+            
         try:
             with open(file_path, 'rb') as file:
                 file_content = file.read()
-              
+                # Base64 encoding
                 import base64
                 encoded_content = base64.b64encode(file_content).decode('utf-8')
+                
+                # Dosya sayısı sınırlaması (10 adet)
+                if len(self.attachments) >= 10:
+                    raise ValueError("Maximum 10 attachments allowed per note.")
+                    
                 self.attachments.append({
                     'name': file_name,
-                    'content': encoded_content
+                    'content': encoded_content,
+                    'size': file_size,
+                    'type': file_extension,
+                    'added_time': datetime.now().isoformat()
                 })
                 return True
         except Exception as e:
             print(f"Dosya ekleme hatası: {str(e)}")
-            return False
+            raise e
             
     def get_attachment(self, file_name):
     
@@ -195,22 +431,48 @@ class Note:
         note.content = data.get('content', '')
         note.tags = data.get('tags', [])
         note.priority = data.get('priority', 'low')
-        note.due_date = datetime.fromisoformat(data.get('due_date', datetime.now().isoformat()))
+        
+        # Tarih alanlarını daha güvenli şekilde işleyelim
+        try:
+            note.due_date = datetime.fromisoformat(data.get('due_date', datetime.now().isoformat()))
+        except (ValueError, TypeError):
+            note.due_date = datetime.now()
+            
+        try:
+            note.created_at = datetime.fromisoformat(data.get('created_at', datetime.now().isoformat()))
+        except (ValueError, TypeError):
+            note.created_at = datetime.now()
+            
+        try:
+            note.modified_at = datetime.fromisoformat(data.get('modified_at', datetime.now().isoformat()))
+        except (ValueError, TypeError):
+            note.modified_at = datetime.now()
+            
         note.category = data.get('category', 'general')
         note.color = data.get('color', '#ffffff')
         note.font_family = data.get('font_family', 'Arial')
         note.font_size = data.get('font_size', 10)
         note.is_encrypted = data.get('is_encrypted', False)
-        note.created_at = datetime.fromisoformat(data.get('created_at', datetime.now().isoformat()))
-        note.modified_at = datetime.fromisoformat(data.get('modified_at', datetime.now().isoformat()))
         note.attachments = data.get('attachments', [])
+        
+        # Hatırlatıcı alanını güvenli şekilde işleyelim
         reminder_str = data.get('reminder')
-        note.reminder = datetime.fromisoformat(reminder_str) if reminder_str else None
+        if reminder_str:
+            try:
+                note.reminder = datetime.fromisoformat(reminder_str)
+            except (ValueError, TypeError):
+                note.reminder = None
+        else:
+            note.reminder = None
+            
         note.is_favorite = data.get('is_favorite', False)
         note.is_archived = data.get('is_archived', False)
         return note
 
 class NoteEditor(QWidget):
+    reminder_changed = pyqtSignal(int)  # Hatırlatıcı değişiklik sinyali
+    attachment_changed = pyqtSignal(int)  # Ek değişiklik sinyali
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup_ui()
@@ -220,29 +482,30 @@ class NoteEditor(QWidget):
         layout.setSpacing(10)
         layout.setContentsMargins(10, 10, 10, 10)
         
-        # Title with modern styling
-        title_layout = QHBoxLayout()
+        # Başlık (modern stil)
         title_label = QLabel("Title:")
         title_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.title_edit = QLineEdit()
+        self.title_edit.setPlaceholderText("Enter note title...")
         self.title_edit.setStyleSheet("""
             QLineEdit {
                 background-color: #2d2d2d;
                 color: white;
                 border: 1px solid #3d3d3d;
-                padding: 8px;
-                border-radius: 4px;
-                font-size: 14px;
+                padding: 10px;
+                border-radius: 5px;
+                font-size: 16px;
+                font-weight: bold;
             }
             QLineEdit:focus {
-                border: 1px solid #4d4d4d;
+                border: 1px solid #4d9de0;
+                background-color: #333333;
             }
         """)
-        title_layout.addWidget(title_label)
-        title_layout.addWidget(self.title_edit)
-        layout.addLayout(title_layout)
+        layout.addWidget(title_label)
+        layout.addWidget(self.title_edit)
         
-        # Content with rich text support
+        # İçerik (zengin metin desteği)
         content_label = QLabel("Content:")
         content_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.content_edit = QTextEdit()
@@ -251,43 +514,48 @@ class NoteEditor(QWidget):
                 background-color: #2d2d2d;
                 color: white;
                 border: 1px solid #3d3d3d;
-                padding: 8px;
-                border-radius: 4px;
+                padding: 10px;
+                border-radius: 5px;
                 font-size: 14px;
+                line-height: 1.5;
             }
             QTextEdit:focus {
-                border: 1px solid #4d4d4d;
+                border: 1px solid #4d9de0;
+                background-color: #333333;
             }
         """)
         layout.addWidget(content_label)
         layout.addWidget(self.content_edit)
         
-        # Tags with modern styling
-        tags_layout = QHBoxLayout()
+        # Alt panel (metadata ve ayarlar)
+        bottom_layout = QHBoxLayout()
+        
+        # Sol alt panel (etiketler, öncelik, kategori)
+        left_panel = QVBoxLayout()
+        
+        # Etiketler
         tags_label = QLabel("Tags:")
         tags_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.tags_edit = QLineEdit()
-        self.tags_edit.setPlaceholderText("Comma separated tags")
+        self.tags_edit.setPlaceholderText("Enter tags separated by commas...")
         self.tags_edit.setStyleSheet("""
             QLineEdit {
                 background-color: #2d2d2d;
                 color: white;
                 border: 1px solid #3d3d3d;
                 padding: 8px;
-                border-radius: 4px;
+                border-radius: 5px;
                 font-size: 14px;
             }
             QLineEdit:focus {
-                border: 1px solid #4d4d4d;
+                border: 1px solid #4d9de0;
+                background-color: #333333;
             }
         """)
-        tags_layout.addWidget(tags_label)
-        tags_layout.addWidget(self.tags_edit)
-        layout.addLayout(tags_layout)
+        left_panel.addWidget(tags_label)
+        left_panel.addWidget(self.tags_edit)
         
-        # Priority and Category with modern styling
-        priority_category_layout = QHBoxLayout()
-        
+        # Öncelik
         priority_label = QLabel("Priority:")
         priority_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.priority_combo = QComboBox()
@@ -298,59 +566,69 @@ class NoteEditor(QWidget):
                 color: white;
                 border: 1px solid #3d3d3d;
                 padding: 8px;
-                border-radius: 4px;
+                border-radius: 5px;
                 font-size: 14px;
+                min-width: 150px;
             }
-            QComboBox:hover {
-                border: 1px solid #4d4d4d;
+            QComboBox:focus {
+                border: 1px solid #4d9de0;
+                background-color: #333333;
             }
             QComboBox::drop-down {
-                border: none;
-                width: 20px;
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 30px;
+                border-left: 1px solid #3d3d3d;
             }
-            QComboBox::down-arrow {
-                image: url(down_arrow.png);
-                width: 12px;
-                height: 12px;
+            QComboBox QAbstractItemView {
+                background-color: #2d2d2d;
+                color: white;
+                selection-background-color: #4d9de0;
+                selection-color: white;
             }
         """)
-        priority_category_layout.addWidget(priority_label)
-        priority_category_layout.addWidget(self.priority_combo)
+        left_panel.addWidget(priority_label)
+        left_panel.addWidget(self.priority_combo)
         
+        # Kategori
         category_label = QLabel("Category:")
         category_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.category_combo = QComboBox()
-        self.category_combo.addItems(["general", "work", "personal", "ideas"])
-        self.category_combo.setEditable(True)
+        self.category_combo.addItems(["general", "work", "personal", "ideas", "tasks"])
         self.category_combo.setStyleSheet("""
             QComboBox {
                 background-color: #2d2d2d;
                 color: white;
                 border: 1px solid #3d3d3d;
                 padding: 8px;
-                border-radius: 4px;
+                border-radius: 5px;
                 font-size: 14px;
+                min-width: 150px;
             }
-            QComboBox:hover {
-                border: 1px solid #4d4d4d;
+            QComboBox:focus {
+                border: 1px solid #4d9de0;
+                background-color: #333333;
             }
             QComboBox::drop-down {
-                border: none;
-                width: 20px;
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 30px;
+                border-left: 1px solid #3d3d3d;
             }
-            QComboBox::down-arrow {
-                image: url(down_arrow.png);
-                width: 12px;
-                height: 12px;
+            QComboBox QAbstractItemView {
+                background-color: #2d2d2d;
+                color: white;
+                selection-background-color: #4d9de0;
+                selection-color: white;
             }
         """)
-        priority_category_layout.addWidget(category_label)
-        priority_category_layout.addWidget(self.category_combo)
+        left_panel.addWidget(category_label)
+        left_panel.addWidget(self.category_combo)
         
-        layout.addLayout(priority_category_layout)
+        # Sağ alt panel (tarih, onay kutuları)
+        right_panel = QVBoxLayout()
         
-        # Due Date with modern styling
-        due_date_layout = QHBoxLayout()
+        # Son tarih
         due_date_label = QLabel("Due Date:")
         due_date_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.due_date_edit = QLineEdit()
@@ -361,76 +639,94 @@ class NoteEditor(QWidget):
                 color: white;
                 border: 1px solid #3d3d3d;
                 padding: 8px;
-                border-radius: 4px;
+                border-radius: 5px;
                 font-size: 14px;
             }
             QLineEdit:focus {
-                border: 1px solid #4d4d4d;
+                border: 1px solid #4d9de0;
+                background-color: #333333;
             }
         """)
-        due_date_layout.addWidget(due_date_label)
+        calendar_button = ModernButton("📅")
+        calendar_button.setFixedSize(40, 35)
+        calendar_button.clicked.connect(self.show_calendar)
+        due_date_layout = QHBoxLayout()
         due_date_layout.addWidget(self.due_date_edit)
-        layout.addLayout(due_date_layout)
+        due_date_layout.addWidget(calendar_button)
+        right_panel.addWidget(due_date_label)
+        right_panel.addLayout(due_date_layout)
         
-        # Formatting Tools with modern styling
-        format_toolbar = QToolBar()
-        format_toolbar.setIconSize(QSize(16, 16))
-        format_toolbar.setStyleSheet("""
-            QToolBar {
-                background-color: #2d2d2d;
-                border: none;
-                spacing: 5px;
-                padding: 5px;
-            }
-        """)
+        # Onay kutuları grubu
+        check_label = QLabel("Options:")
+        check_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
+        right_panel.addWidget(check_label)
         
-        # Color picker
-        color_action = QAction("Color", self)
-        color_action.triggered.connect(self.choose_color)
-        format_toolbar.addAction(color_action)
+        # Şifreleme onay kutusu
+        self.encrypt_check = ModernCheckBox("Encrypt")
+        right_panel.addWidget(self.encrypt_check)
         
-        # Font picker
-        font_action = QAction("Font", self)
-        font_action.triggered.connect(self.choose_font)
-        format_toolbar.addAction(font_action)
-        
-        layout.addWidget(format_toolbar)
-        
-        # Additional features
-        features_layout = QHBoxLayout()
-        
-        # Encryption
-        self.encrypt_check = ModernCheckBox("Encrypt Note")
-        features_layout.addWidget(self.encrypt_check)
-        
-        # Favorite
+        # Favori onay kutusu
         self.favorite_check = ModernCheckBox("Favorite")
-        features_layout.addWidget(self.favorite_check)
+        right_panel.addWidget(self.favorite_check)
         
-        # Archive
+        # Arşivleme onay kutusu
         self.archive_check = ModernCheckBox("Archive")
-        features_layout.addWidget(self.archive_check)
+        right_panel.addWidget(self.archive_check)
         
-        # Reminder
+        # Hatırlatıcı onay kutusu
         self.reminder_check = ModernCheckBox("Set Reminder")
-        features_layout.addWidget(self.reminder_check)
+        self.reminder_check.stateChanged.connect(self.on_reminder_changed)
+        right_panel.addWidget(self.reminder_check)
         
-        # Attachments
-        self.attachment_check = ModernCheckBox("Add Attachment")
-        features_layout.addWidget(self.attachment_check)
+        # Ek onay kutusu
+        self.attachment_check = ModernCheckBox("Attachments")
+        self.attachment_check.stateChanged.connect(self.on_attachment_changed)
+        right_panel.addWidget(self.attachment_check)
         
-        layout.addLayout(features_layout)
+        # Alt panelleri düzene ekle
+        bottom_layout.addLayout(left_panel)
+        bottom_layout.addLayout(right_panel)
+        layout.addLayout(bottom_layout)
         
-        # Action buttons
+        # Düğme satırı
         button_layout = QHBoxLayout()
         
-        save_btn = ModernButton("Save Note")
-        save_btn.clicked.connect(self.save_note)
-        button_layout.addWidget(save_btn)
+        # Kaydet düğmesi
+        save_button = ModernButton("Save")
+        save_button.setStyleSheet("""
+            QPushButton {
+                background-color: #4d9de0;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #5db9e6;
+            }
+            QPushButton:pressed {
+                background-color: #3d7de0;
+            }
+        """)
+        save_button.clicked.connect(self.save_note)
+        button_layout.addWidget(save_button)
         
-        clear_btn = ModernButton("Clear")
-        clear_btn.clicked.connect(self.clear_form)
-        button_layout.addWidget(clear_btn)
+        # Temizle düğmesi
+        clear_button = ModernButton("Clear Form")
+        clear_button.clicked.connect(self.clear_form)
+        button_layout.addWidget(clear_button)
+        
+        # Renk seçme düğmesi
+        color_button = ModernButton("Text Color")
+        color_button.clicked.connect(self.choose_color)
+        button_layout.addWidget(color_button)
+        
+        # Yazı tipi seçme düğmesi
+        font_button = ModernButton("Text Font")
+        font_button.clicked.connect(self.choose_font)
+        button_layout.addWidget(font_button)
         
         layout.addLayout(button_layout)
         
@@ -492,6 +788,102 @@ class NoteEditor(QWidget):
         while parent is not None and not isinstance(parent, MainWindow):
             parent = parent.parent()
         return parent
+
+    def show_calendar(self):
+        # Takvim widget'ı ile tarih seçme dialogu açma
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Select Date")
+        dialog.setGeometry(300, 300, 400, 400)
+        dialog.setStyleSheet("""
+            QDialog {
+                background-color: #2d2d2d;
+                color: white;
+            }
+        """)
+        
+        layout = QVBoxLayout()
+        
+        calendar = QCalendarWidget()
+        calendar.setStyleSheet("""
+            QCalendarWidget {
+                background-color: #2d2d2d;
+                color: white;
+            }
+            QCalendarWidget QToolButton {
+                color: white;
+                background-color: #3d3d3d;
+                border: 1px solid #4d4d4d;
+                border-radius: 4px;
+            }
+            QCalendarWidget QMenu {
+                background-color: #2d2d2d;
+                color: white;
+            }
+            QCalendarWidget QSpinBox {
+                background-color: #2d2d2d;
+                color: white;
+                border: 1px solid #4d4d4d;
+            }
+            QCalendarWidget QAbstractItemView:enabled {
+                color: white;
+                background-color: #3d3d3d;
+                selection-background-color: #4d9de0;
+                selection-color: white;
+            }
+            QCalendarWidget QWidget#qt_calendar_navigationbar {
+                background-color: #2d2d2d;
+            }
+        """)
+        layout.addWidget(calendar)
+        
+        time_layout = QHBoxLayout()
+        time_label = QLabel("Time (HH:MM):")
+        time_label.setStyleSheet("color: white;")
+        time_edit = QLineEdit()
+        time_edit.setText(datetime.now().strftime("%H:%M"))
+        time_edit.setStyleSheet("""
+            QLineEdit {
+                background-color: #2d2d2d;
+                color: white;
+                border: 1px solid #3d3d3d;
+                padding: 5px;
+                border-radius: 4px;
+            }
+        """)
+        time_layout.addWidget(time_label)
+        time_layout.addWidget(time_edit)
+        layout.addLayout(time_layout)
+        
+        button_layout = QHBoxLayout()
+        ok_button = ModernButton("OK")
+        cancel_button = ModernButton("Cancel")
+        button_layout.addWidget(ok_button)
+        button_layout.addWidget(cancel_button)
+        layout.addLayout(button_layout)
+        
+        dialog.setLayout(layout)
+        
+        def update_date():
+            selected_date = calendar.selectedDate().toPyDate()
+            time_text = time_edit.text()
+            try:
+                selected_time = datetime.strptime(time_text, "%H:%M").time()
+                full_datetime = datetime.combine(selected_date, selected_time)
+                self.due_date_edit.setText(full_datetime.strftime("%Y-%m-%d %H:%M"))
+                dialog.accept()
+            except ValueError:
+                QMessageBox.warning(dialog, "Error", "Invalid time format. Use HH:MM.")
+        
+        ok_button.clicked.connect(update_date)
+        cancel_button.clicked.connect(dialog.reject)
+        
+        dialog.exec_()
+
+    def on_reminder_changed(self, state):
+        self.reminder_changed.emit(state)
+    
+    def on_attachment_changed(self, state):
+        self.attachment_changed.emit(state)
 
 class NoteList(QWidget):
  
@@ -752,158 +1144,328 @@ class CalendarView(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Securonis Notes")
-        self.setGeometry(100, 100, 1200, 800)
-        
-        # Initialize note storage
         self.notes = []
         self.current_note = None
         
-        # Şifreleme anahtarı
-        self.encryption_key = None
-        self.load_encryption_key()
+        # Uygulama özellikleri için try-except blokları
+        try:
+            self.load_encryption_key()
+        except Exception as e:
+            QMessageBox.warning(self, "Encryption Error", 
+                              f"Error loading encryption key: {str(e)}\nEncryption features will be disabled.")
+            self.encryption_key = None
         
-        # Hatırlatıcı zamanlayıcısı
+        try:
+            self.setup_ui()
+        except Exception as e:
+            QMessageBox.critical(self, "Setup Error", 
+                               f"Error setting up UI: {str(e)}")
+            raise e
+        
+        try:
+            self.load_notes()
+        except Exception as e:
+            QMessageBox.warning(self, "Load Error", 
+                              f"Error loading notes: {str(e)}\nA new empty note file will be created.")
+            self.notes = []
+            
+        # Check reminders periodically
         self.reminder_timer = QTimer(self)
         self.reminder_timer.timeout.connect(self.check_reminders)
-        self.reminder_timer.start(60000)  # Her dakika kontrol et
-        
-        # Setup UI
-        self.setup_ui()
-        self.setup_menu()
-        self.setup_toolbar()
-        
-        # Load notes
-        self.load_notes()
+        self.reminder_timer.start(60000)  # Check every minute
         
         # Setup status bar
         self.statusBar().showMessage("Ready")
         
     def setup_ui(self):
         # Create central widget and main layout
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QHBoxLayout(central_widget)
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        
+        main_layout = QHBoxLayout()
         main_layout.setSpacing(10)
-        main_layout.setContentsMargins(10, 10, 10, 10)
         
-        # Create splitter for resizable panels
-        splitter = QSplitter(Qt.Horizontal)
+        # Create left panel (note list)
+        left_panel = QVBoxLayout()
         
-        # Left panel - Note list
+        # Arama özelliği için arama kutusu ekleyelim
+        search_layout = QHBoxLayout()
+        search_label = QLabel("Search:")
+        search_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText("Search in notes...")
+        self.search_edit.setStyleSheet("""
+            QLineEdit {
+                background-color: #2d2d2d;
+                color: white;
+                border: 1px solid #3d3d3d;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #4d4d4d;
+            }
+        """)
+        self.search_edit.textChanged.connect(self.filter_notes)
+        search_layout.addWidget(search_label)
+        search_layout.addWidget(self.search_edit)
+        left_panel.addLayout(search_layout)
+        
+        # Etiket filtreleme için combobox ekleyelim
+        tag_filter_layout = QHBoxLayout()
+        tag_filter_label = QLabel("Filter by tag:")
+        tag_filter_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
+        self.tag_filter_combo = QComboBox()
+        self.tag_filter_combo.setStyleSheet("""
+            QComboBox {
+                background-color: #2d2d2d;
+                color: white;
+                border: 1px solid #3d3d3d;
+                padding: 6px;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+            QComboBox:focus {
+                border: 1px solid #4d4d4d;
+            }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 20px;
+                border-left: 1px solid #3d3d3d;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #2d2d2d;
+                color: white;
+                selection-background-color: #4d4d4d;
+                selection-color: white;
+            }
+        """)
+        self.tag_filter_combo.addItem("All Tags")
+        self.tag_filter_combo.currentIndexChanged.connect(self.filter_notes)
+        tag_filter_layout.addWidget(tag_filter_label)
+        tag_filter_layout.addWidget(self.tag_filter_combo)
+        left_panel.addLayout(tag_filter_layout)
+        
+        # Not listesi
         self.note_list = NoteList()
-        splitter.addWidget(self.note_list)
+        left_panel.addWidget(self.note_list)
         
-        # Right panel - Note editor
+        # Create right panel (note editor)
+        right_panel = QVBoxLayout()
         self.note_editor = NoteEditor()
-        splitter.addWidget(self.note_editor)
+        right_panel.addWidget(self.note_editor)
         
-        # Set splitter sizes
-        splitter.setSizes([300, 900])
-        
-        main_layout.addWidget(splitter)
-        
-        # Connect signals
+        # Connect note selection signal
         self.note_list.note_selected.connect(self.on_note_selected)
-        self.note_list.search_edit.textChanged.connect(self.filter_notes)
-        self.note_list.priority_filter.currentTextChanged.connect(self.filter_notes)
-        self.note_list.category_filter.currentTextChanged.connect(self.filter_notes)
-        self.note_list.show_favorites.stateChanged.connect(self.filter_notes)
-        self.note_list.show_archived.stateChanged.connect(self.filter_notes)
-        self.note_list.show_encrypted.stateChanged.connect(self.filter_notes)
         
-        # Connect note editor signals
-        self.note_editor.reminder_check.stateChanged.connect(self.setup_reminder)
-        self.note_editor.attachment_check.stateChanged.connect(self.handle_attachment)
+        # Connect editor signals
+        self.note_editor.reminder_changed.connect(self.setup_reminder)
+        self.note_editor.attachment_changed.connect(self.handle_attachment)
+        
+        # Add panels to main layout
+        main_layout.addLayout(left_panel, 1)
+        main_layout.addLayout(right_panel, 2)
+        
+        self.central_widget.setLayout(main_layout)
+        
+        # Set window properties
+        self.setWindowTitle("Securonis Notes")
+        self.setGeometry(100, 100, 1200, 800)
+        self.setWindowIcon(QIcon("icon.png"))
+        
+        # Statü çubuğu
+        self.statusBar().setStyleSheet("background-color: #1d1d1d; color: white;")
+        
+        # Setup menu and toolbar
+        self.setup_menu()
+        self.setup_toolbar()
+        self.statusBar().showMessage("Ready")
         
     def setup_menu(self):
         menubar = self.menuBar()
+        menubar.setStyleSheet("""
+            QMenuBar {
+                background-color: #1d1d1d;
+                color: white;
+            }
+            QMenuBar::item {
+                background-color: #1d1d1d;
+                color: white;
+                padding: 6px 12px;
+            }
+            QMenuBar::item:selected {
+                background-color: #3d3d3d;
+            }
+        """)
         
         # File menu
-        file_menu = menubar.addMenu("File")
+        file_menu = menubar.addMenu("&File")
+        file_menu.setStyleSheet("""
+            QMenu {
+                background-color: #1d1d1d;
+                color: white;
+                border: 1px solid #3d3d3d;
+            }
+            QMenu::item {
+                padding: 6px 25px 6px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #3d3d3d;
+            }
+        """)
         
-        new_action = QAction("New Note", self)
+        new_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_FileIcon)), "&New Note", self)
         new_action.setShortcut("Ctrl+N")
         new_action.triggered.connect(self.new_note)
         file_menu.addAction(new_action)
         
-        save_action = QAction("Save", self)
+        save_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton)), "&Save Note", self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.save_note)
         file_menu.addAction(save_action)
         
+        delete_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_TrashIcon)), "&Delete Note", self)
+        delete_action.setShortcut("Delete")
+        delete_action.triggered.connect(self.delete_note)
+        file_menu.addAction(delete_action)
+        
         file_menu.addSeparator()
         
-        import_action = QAction("Import from CSV", self)
-        import_action.setShortcut("Ctrl+I")
+        backup_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton)), "&Backup Notes", self)
+        backup_action.triggered.connect(self.backup_notes)
+        file_menu.addAction(backup_action)
+        
+        restore_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton)), "&Restore Notes", self)
+        restore_action.triggered.connect(self.restore_notes)
+        file_menu.addAction(restore_action)
+        
+        file_menu.addSeparator()
+        
+        import_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_FileDialogListView)), "&Import Notes", self)
         import_action.triggered.connect(self.import_notes)
         file_menu.addAction(import_action)
         
-        export_action = QAction("Export to CSV", self)
-        export_action.setShortcut("Ctrl+E")
+        export_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView)), "&Export Notes", self)
         export_action.triggered.connect(self.export_notes)
         file_menu.addAction(export_action)
         
         file_menu.addSeparator()
         
-        exit_action = QAction("Exit", self)
+        exit_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogCloseButton)), "&Exit", self)
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
         
         # Edit menu
-        edit_menu = menubar.addMenu("Edit")
+        edit_menu = menubar.addMenu("&Edit")
+        edit_menu.setStyleSheet("""
+            QMenu {
+                background-color: #1d1d1d;
+                color: white;
+                border: 1px solid #3d3d3d;
+            }
+            QMenu::item {
+                padding: 6px 25px 6px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #3d3d3d;
+            }
+        """)
         
-        delete_action = QAction("Delete Note", self)
-        delete_action.setShortcut("Delete")
-        delete_action.triggered.connect(self.delete_note)
-        edit_menu.addAction(delete_action)
+        color_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogResetButton)), "Choose &Color", self)
+        color_action.triggered.connect(self.choose_color)
+        edit_menu.addAction(color_action)
         
-        edit_menu.addSeparator()
+        font_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogResetButton)), "Choose &Font", self)
+        font_action.triggered.connect(self.choose_font)
+        edit_menu.addAction(font_action)
         
-        encrypt_action = QAction("Encrypt Note", self)
-        encrypt_action.setShortcut("Ctrl+Shift+E")
+        encrypt_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogResetButton)), "&Encrypt/Decrypt", self)
         encrypt_action.triggered.connect(self.toggle_encryption)
         edit_menu.addAction(encrypt_action)
         
-        # View menu
-        view_menu = menubar.addMenu("View")
+        edit_menu.addSeparator()
         
-        calendar_action = QAction("Calendar View", self)
-        calendar_action.setShortcut("Ctrl+Shift+C")
-        calendar_action.triggered.connect(self.show_calendar)
-        view_menu.addAction(calendar_action)
+        # Kategori ve Etiket Yönetim Menüsü
+        manage_menu = menubar.addMenu("&Manage")
+        manage_menu.setStyleSheet("""
+            QMenu {
+                background-color: #1d1d1d;
+                color: white;
+                border: 1px solid #3d3d3d;
+            }
+            QMenu::item {
+                padding: 6px 25px 6px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #3d3d3d;
+            }
+        """)
+        
+        manage_categories_action = QAction("Manage &Categories", self)
+        manage_categories_action.triggered.connect(self.manage_categories)
+        manage_menu.addAction(manage_categories_action)
+        
+        manage_tags_action = QAction("Manage &Tags", self)
+        manage_tags_action.triggered.connect(self.manage_tags)
+        manage_menu.addAction(manage_tags_action)
+        
+        # View menu
+        view_menu = menubar.addMenu("&View")
+        view_menu.setStyleSheet("""
+            QMenu {
+                background-color: #1d1d1d;
+                color: white;
+                border: 1px solid #3d3d3d;
+            }
+            QMenu::item {
+                padding: 6px 25px 6px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #3d3d3d;
+            }
+        """)
+        
+        self.show_favorites_action = QAction("Show Only &Favorites", self)
+        self.show_favorites_action.setCheckable(True)
+        self.show_favorites_action.triggered.connect(self.toggle_favorites)
+        view_menu.addAction(self.show_favorites_action)
+        
+        self.show_archived_action = QAction("Show Only &Archived", self)
+        self.show_archived_action.setCheckable(True)
+        self.show_archived_action.triggered.connect(self.toggle_archived)
+        view_menu.addAction(self.show_archived_action)
+        
+        self.show_encrypted_action = QAction("Show Only &Encrypted", self)
+        self.show_encrypted_action.setCheckable(True)
+        self.show_encrypted_action.triggered.connect(self.filter_notes)
+        view_menu.addAction(self.show_encrypted_action)
         
         view_menu.addSeparator()
         
-        show_favorites_action = QAction("Show Favorites", self)
-        show_favorites_action.setShortcut("Ctrl+Shift+F")
-        show_favorites_action.triggered.connect(self.toggle_favorites)
-        view_menu.addAction(show_favorites_action)
-        
-        show_archived_action = QAction("Show Archived", self)
-        show_archived_action.setShortcut("Ctrl+Shift+A")
-        show_archived_action.triggered.connect(self.toggle_archived)
-        view_menu.addAction(show_archived_action)
-        
-        # Tools menu
-        tools_menu = menubar.addMenu("Tools")
-        
-        backup_action = QAction("Backup Notes", self)
-        backup_action.setShortcut("Ctrl+Shift+B")
-        backup_action.triggered.connect(self.backup_notes)
-        tools_menu.addAction(backup_action)
-        
-        restore_action = QAction("Restore from Backup", self)
-        restore_action.setShortcut("Ctrl+Shift+R")
-        restore_action.triggered.connect(self.restore_notes)
-        tools_menu.addAction(restore_action)
+        calendar_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogHelpButton)), "&Calendar View", self)
+        calendar_action.triggered.connect(self.show_calendar)
+        view_menu.addAction(calendar_action)
         
         # Help menu
-        help_menu = menubar.addMenu("Help")
+        help_menu = menubar.addMenu("&Help")
+        help_menu.setStyleSheet("""
+            QMenu {
+                background-color: #1d1d1d;
+                color: white;
+                border: 1px solid #3d3d3d;
+            }
+            QMenu::item {
+                padding: 6px 25px 6px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #3d3d3d;
+            }
+        """)
         
-        about_action = QAction("About", self)
-        about_action.setShortcut("F1")
+        about_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogHelpButton)), "&About", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
         
@@ -1043,67 +1605,207 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("Reminder removed")
             
     def handle_attachment(self, state):
-        if state == Qt.Checked:
+        if not self.current_note:
+            return
+            
+        if state:
+            # Eklenecek dosyayı seç
             file_path, _ = QFileDialog.getOpenFileName(
-                self, "Add File", "", "All Files (*.*)"
+                self, 
+                "Select File to Attach", 
+                "", 
+                "All Files (*);;Text Files (*.txt);;Images (*.png *.jpg *.jpeg *.gif);;Documents (*.pdf *.doc *.docx)"
             )
+            
             if file_path:
-                if self.current_note.add_attachment(file_path):
-                    self.statusBar().showMessage(f"File added: {os.path.basename(file_path)}")
-                else:
-                    QMessageBox.critical(self, "Error", "An error occurred while adding the file.")
+                try:
+                    # Dosya ekleme işlemi
+                    self.current_note.add_attachment(file_path)
+                    
+                    # Dosya listesini göster
+                    attached_files = [att['name'] for att in self.current_note.attachments]
+                    QMessageBox.information(
+                        self, 
+                        "Attachment Added", 
+                        f"Attached file: {os.path.basename(file_path)}\n\nTotal attachments: {len(attached_files)}"
+                    )
+                    
+                    # Not durumunu güncelle
+                    self.update_editor()
+                    self.save_notes()
+                except ValueError as e:
+                    # Doğrulama hataları
+                    QMessageBox.warning(self, "Attachment Error", str(e))
+                    self.note_editor.attachment_check.setChecked(False)
+                except Exception as e:
+                    # Diğer hatalar
+                    QMessageBox.critical(self, "Error", f"Error adding attachment: {str(e)}")
+                    self.note_editor.attachment_check.setChecked(False)
         else:
+            # Ek yönetimi
             if self.current_note.attachments:
-       
-                file_names = [attachment['name'] for attachment in self.current_note.attachments]
+                # Dosya listesi
+                attachment_names = [att['name'] for att in self.current_note.attachments]
                 file_name, ok = QInputDialog.getItem(
-                    self, "Delete File", "Select the file to delete:", 
-                    file_names, 0, False
+                    self, 
+                    "Manage Attachments", 
+                    "Select attachment to manage:", 
+                    attachment_names, 
+                    0, 
+                    False
                 )
+                
                 if ok and file_name:
-         
-                    self.current_note.attachments = [
-                        attachment for attachment in self.current_note.attachments 
-                        if attachment['name'] != file_name
-                    ]
-                    self.statusBar().showMessage(f"File removed: {file_name}")
+                    # Seçenek menüsü
+                    action, ok = QInputDialog.getItem(
+                        self, 
+                        "Attachment Options", 
+                        f"What do you want to do with {file_name}?", 
+                        ["View/Open", "Save to disk", "Delete"], 
+                        0, 
+                        False
+                    )
+                    
+                    if ok:
+                        if action == "View/Open":
+                            # Dosyayı geçici olarak kaydet ve aç
+                            attachment_content = None
+                            for att in self.current_note.attachments:
+                                if att['name'] == file_name:
+                                    attachment_content = att['content']
+                                    break
+                                    
+                            if attachment_content:
+                                import base64
+                                import tempfile
+                                import subprocess
+                                import platform
+                                
+                                # Geçici dosya oluştur
+                                temp_dir = tempfile.gettempdir()
+                                temp_file_path = os.path.join(temp_dir, file_name)
+                                
+                                with open(temp_file_path, 'wb') as f:
+                                    f.write(base64.b64decode(attachment_content))
+                                
+                                # Dosyayı aç
+                                if platform.system() == 'Windows':
+                                    os.startfile(temp_file_path)
+                                elif platform.system() == 'Darwin':  # macOS
+                                    subprocess.call(['open', temp_file_path])
+                                else:  # Linux
+                                    subprocess.call(['xdg-open', temp_file_path])
+                        
+                        elif action == "Save to disk":
+                            # Dosyayı kaydet
+                            save_path, _ = QFileDialog.getSaveFileName(
+                                self, 
+                                "Save Attachment", 
+                                file_name
+                            )
+                            
+                            if save_path:
+                                attachment_content = None
+                                for att in self.current_note.attachments:
+                                    if att['name'] == file_name:
+                                        attachment_content = att['content']
+                                        break
+                                        
+                                if attachment_content:
+                                    import base64
+                                    with open(save_path, 'wb') as f:
+                                        f.write(base64.b64decode(attachment_content))
+                                    
+                                    QMessageBox.information(
+                                        self, 
+                                        "Success", 
+                                        f"Attachment saved to {save_path}"
+                                    )
+                        
+                        elif action == "Delete":
+                            # Dosyayı sil
+                            reply = QMessageBox.question(
+                                self, 
+                                "Confirm Delete", 
+                                f"Are you sure you want to delete {file_name}?", 
+                                QMessageBox.Yes | QMessageBox.No
+                            )
+                            
+                            if reply == QMessageBox.Yes:
+                                for i, att in enumerate(self.current_note.attachments):
+                                    if att['name'] == file_name:
+                                        del self.current_note.attachments[i]
+                                        break
+                                
+                                QMessageBox.information(
+                                    self, 
+                                    "Success", 
+                                    f"Attachment {file_name} deleted."
+                                )
+                                
+                                # Not durumunu güncelle
+                                self.update_editor()
+                                self.save_notes()
+                
+                # Checkbox durumunu güncelle
+                self.note_editor.attachment_check.setChecked(len(self.current_note.attachments) > 0)
+            else:
+                QMessageBox.information(
+                    self, 
+                    "No Attachments", 
+                    "This note has no attachments."
+                )
+                self.note_editor.attachment_check.setChecked(False)
         
     def toggle_favorites(self):
-        self.note_list.show_favorites.setChecked(
-            not self.note_list.show_favorites.isChecked()
-        )
+        # Favoriler filtresini değiştir
+        if hasattr(self, 'show_favorites_action'):
+            self.show_favorites_action.setChecked(not self.show_favorites_action.isChecked())
         self.filter_notes()
         
     def toggle_archived(self):
-        self.note_list.show_archived.setChecked(
-            not self.note_list.show_archived.isChecked()
-        )
+        # Arşiv filtresini değiştir
+        if hasattr(self, 'show_archived_action'):
+            self.show_archived_action.setChecked(not self.show_archived_action.isChecked())
         self.filter_notes()
         
     def filter_notes(self):
-        search_text = self.note_list.search_edit.text().lower()
-        priority_filter = self.note_list.priority_filter.currentText()
-        category_filter = self.note_list.category_filter.currentText()
-        show_favorites = self.note_list.show_favorites.isChecked()
-        show_archived = self.note_list.show_archived.isChecked()
-        show_encrypted = self.note_list.show_encrypted.isChecked()
+        # Notları filtrele (arama ve etiket filtreleri)
+        search_text = self.search_edit.text().lower() if hasattr(self, 'search_edit') else ""
+        selected_tag = self.tag_filter_combo.currentText() if hasattr(self, 'tag_filter_combo') else "All Tags"
         
+        # Favoriler, arşiv ve şifreleme filtreleri
+        show_favorites = self.show_favorites_action.isChecked() if hasattr(self, 'show_favorites_action') else False
+        show_archived = self.show_archived_action.isChecked() if hasattr(self, 'show_archived_action') else False
+        show_encrypted = self.show_encrypted_action.isChecked() if hasattr(self, 'show_encrypted_action') else False
+        
+        # Not listesini temizle
         self.note_list.note_list.clear()
+        
+        # Filtrelemeleri uygula
         for note in self.notes:
-            if (search_text in note.title.lower() or
-                search_text in note.content.lower() or
-                any(search_text in tag.lower() for tag in note.tags)):
-                if (priority_filter == "All" or
-                    note.priority.capitalize() == priority_filter):
-                    if (category_filter == "All" or
-                        note.category.capitalize() == category_filter):
-                        if (not show_favorites or note.is_favorite):
-                            if (not show_archived or note.is_archived):
-                                if (not show_encrypted or note.is_encrypted):
-                                    item = QListWidgetItem(note.title)
-                                    item.setData(Qt.UserRole, note)
-                                    self.note_list.note_list.addItem(item)
-                                    
+            # Arama filtresi
+            title_match = search_text in note.title.lower()
+            content_match = search_text in note.content.lower()
+            tags_match = any(search_text in tag.lower() for tag in note.tags)
+            search_match = title_match or content_match or tags_match
+            
+            # Etiket filtresi
+            tag_match = (selected_tag == "All Tags" or selected_tag in note.tags)
+                
+            # Diğer filtreler
+            favorite_match = (not show_favorites or note.is_favorite)
+            archived_match = (not show_archived or note.is_archived)
+            encrypted_match = (not show_encrypted or note.is_encrypted)
+            
+            # Tüm filtreler eşleşiyorsa, not listesine ekle
+            if (search_match and tag_match and favorite_match and
+                archived_match and encrypted_match):
+                item = QListWidgetItem(note.title)
+                item.setData(Qt.UserRole, note)
+                self.note_list.note_list.addItem(item)
+        
+        # İstatistikleri güncelle
         self.note_list.update_statistics(self.notes)
         
     def new_note(self):
@@ -1114,14 +1816,35 @@ class MainWindow(QMainWindow):
         if not self.current_note:
             self.current_note = Note()
             
+        # Veri doğrulama
+        title = self.note_editor.title_edit.text().strip()
+        if not title:
+            QMessageBox.warning(self, "Validation Error", "Title cannot be empty.")
+            self.note_editor.title_edit.setFocus()
+            return
+            
+        content = self.note_editor.content_edit.toPlainText().strip()
+        if not content:
+            QMessageBox.warning(self, "Validation Error", "Content cannot be empty.")
+            self.note_editor.content_edit.setFocus()
+            return
+            
+        # Tarih formatı doğrulama
+        due_date_str = self.note_editor.due_date_edit.text()
+        try:
+            due_date = datetime.strptime(due_date_str, "%Y-%m-%d %H:%M")
+        except ValueError:
+            QMessageBox.warning(self, "Validation Error", "Invalid date format. Use YYYY-MM-DD HH:MM format.")
+            self.note_editor.due_date_edit.setFocus()
+            return
+            
         # Update note data from editor
-        self.current_note.title = self.note_editor.title_edit.text()
-        self.current_note.content = self.note_editor.content_edit.toPlainText()
+        self.current_note.title = title
+        self.current_note.content = content
         self.current_note.tags = [tag.strip() for tag in self.note_editor.tags_edit.text().split(",") if tag.strip()]
         self.current_note.priority = self.note_editor.priority_combo.currentText()
         self.current_note.category = self.note_editor.category_combo.currentText()
-        self.current_note.due_date = datetime.strptime(self.note_editor.due_date_edit.text(),
-                                                     "%Y-%m-%d %H:%M")
+        self.current_note.due_date = due_date
         self.current_note.is_encrypted = self.note_editor.encrypt_check.isChecked()
         self.current_note.is_favorite = self.note_editor.favorite_check.isChecked()
         self.current_note.is_archived = self.note_editor.archive_check.isChecked()
@@ -1132,6 +1855,7 @@ class MainWindow(QMainWindow):
             self.notes.append(self.current_note)
             
         self.update_note_list()
+        self.update_tag_filter()  # Etiket filtresini güncelle
         self.save_notes()
         
         QMessageBox.information(self, "Success", "Note saved successfully!")
@@ -1275,9 +1999,9 @@ class MainWindow(QMainWindow):
                                                  "", "JSON files (*.json)")
         if file_path:
             try:
-                with open(file_path, 'w') as file:
-                    json.dump([note.__dict__ for note in self.notes],
-                             file, default=str)
+                with open(file_path, 'w', encoding='utf-8') as file:
+                    notes_data = [note.to_dict() for note in self.notes]
+                    json.dump(notes_data, file, ensure_ascii=False, indent=2)
                 QMessageBox.information(self, "Success",
                                       "Notes backed up successfully!")
             except Exception as e:
@@ -1289,9 +2013,9 @@ class MainWindow(QMainWindow):
                                                  "", "JSON files (*.json)")
         if file_path:
             try:
-                with open(file_path, 'r') as file:
+                with open(file_path, 'r', encoding='utf-8') as file:
                     notes_data = json.load(file)
-                    self.notes = [Note(**data) for data in notes_data]
+                    self.notes = [Note.from_dict(data) for data in notes_data]
                 self.update_note_list()
                 QMessageBox.information(self, "Success",
                                       "Notes restored successfully!")
@@ -1371,8 +2095,13 @@ class MainWindow(QMainWindow):
         if not self.current_note:
             return
             
+        # Şifreleme anahtarı kontrolü
+        if not self.encryption_key:
+            QMessageBox.warning(self, "Warning", 
+                              "Encryption key not available. Please restart the application and enter the correct password.")
+            return
+            
         if not self.current_note.is_encrypted:
-      
             try:
                 f = Fernet(self.encryption_key)
                 self.current_note.content = f.encrypt(
@@ -1382,7 +2111,6 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Encryption error: {str(e)}")
         else:
-
             try:
                 f = Fernet(self.encryption_key)
                 self.current_note.content = f.decrypt(
@@ -1395,15 +2123,102 @@ class MainWindow(QMainWindow):
         self.update_editor()
         
     def load_encryption_key(self):
-
         key_file = 'encryption_key.key'
+        
+        # Şifreleme anahtarı varsa
         if os.path.exists(key_file):
-            with open(key_file, 'rb') as file:
-                self.encryption_key = file.read()
+            # Şifre iste
+            password, ok = QInputDialog.getText(
+                self, "Enter Password", 
+                "Enter encryption password:", 
+                QLineEdit.Password
+            )
+            
+            if not ok:
+                # Kullanıcı iptal etti
+                QMessageBox.warning(self, "Warning", 
+                                   "Encryption key not loaded. Some features may not work.")
+                self.encryption_key = None
+                return
+            
+            try:
+                # Dosyadan anahtarı yükle
+                with open(key_file, 'rb') as file:
+                    encrypted_key = file.read()
+                
+                # Anahtarı çöz
+                import hashlib
+                # Hashle şifreyi 32 byte'lık (Fernet için uygun) bir anahtara dönüştür
+                key_from_password = hashlib.sha256(password.encode()).digest()
+                f = Fernet(Fernet.generate_key())
+                # Base64 çözme
+                import base64
+                key_bytes = base64.urlsafe_b64decode(encrypted_key)
+                
+                # XOR ile anahtarı çöz (basit şifreleme)
+                decrypted_key = bytes(a ^ b for a, b in zip(key_bytes, key_from_password))
+                
+                # Geçerli bir Fernet anahtarı mı kontrol et
+                try:
+                    Fernet(decrypted_key)
+                    self.encryption_key = decrypted_key
+                except Exception:
+                    QMessageBox.critical(self, "Error", "Invalid password or corrupted key.")
+                    self.encryption_key = None
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error loading encryption key: {str(e)}")
+                self.encryption_key = None
         else:
-            self.encryption_key = Fernet.generate_key()
-            with open(key_file, 'wb') as file:
-                file.write(self.encryption_key)
+            # İlk kullanım - yeni anahtar oluştur
+            # Şifre iste
+            while True:
+                password, ok = QInputDialog.getText(
+                    self, "Create Password", 
+                    "Create encryption password (min 8 chars):", 
+                    QLineEdit.Password
+                )
+                
+                if not ok:
+                    # Kullanıcı iptal etti - varsayılan şifreleme yöntemi kullan
+                    self.encryption_key = Fernet.generate_key()
+                    QMessageBox.warning(self, "Warning", 
+                                       "Using default encryption. Notes will not be securely encrypted.")
+                    break
+                
+                # Şifre doğrulama
+                if len(password) < 8:
+                    QMessageBox.warning(self, "Warning", "Password must be at least 8 characters.")
+                    continue
+                
+                confirm, ok = QInputDialog.getText(
+                    self, "Confirm Password", 
+                    "Confirm encryption password:", 
+                    QLineEdit.Password
+                )
+                
+                if not ok or password != confirm:
+                    QMessageBox.warning(self, "Warning", "Passwords don't match. Try again.")
+                    continue
+                
+                # Şifre onaylandı, anahtar oluştur
+                self.encryption_key = Fernet.generate_key()
+                
+                # Anahtarı şifrele ve kaydet
+                import hashlib
+                # Hashle şifreyi 32 byte'lık bir anahtara dönüştür
+                key_from_password = hashlib.sha256(password.encode()).digest()
+                
+                # XOR ile anahtarı şifrele (basit şifreleme)
+                key_bytes = base64.urlsafe_b64decode(self.encryption_key)
+                encrypted_key = bytes(a ^ b for a, b in zip(key_bytes, key_from_password))
+                
+                # Base64 kodla ve kaydet
+                with open(key_file, 'wb') as file:
+                    file.write(base64.urlsafe_b64encode(encrypted_key))
+                
+                QMessageBox.information(self, "Success", 
+                                       "Encryption key created and secured with your password.")
+                break
                 
     def check_reminders(self):
         # Hatırlatıcıları kontrol et
@@ -1424,6 +2239,8 @@ class MainWindow(QMainWindow):
                     notes_data = json.load(file)
                     self.notes = [Note.from_dict(data) for data in notes_data]
                 self.update_note_list()
+                self.update_tag_filter()  # Etiket filtresini güncelle
+                self.update_category_combo()  # Kategori combobox'ını güncelle
                 self.statusBar().showMessage(f"{len(self.notes)} notes loaded.")
             else:
                 self.statusBar().showMessage("Note file not found. You can create new notes.")
@@ -1440,8 +2257,18 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"Error saving notes: {str(e)}")
             
     def closeEvent(self, event):
-        self.save_notes()
-        event.accept()
+        try:
+            self.save_notes()
+            # Açık olan veri bağlantılarını kapat
+            if hasattr(self, 'reminder_timer'):
+                self.reminder_timer.stop()
+            event.accept()
+        except Exception as e:
+            # Hata olursa günlüğe yaz
+            with open('error.log', 'a') as f:
+                import datetime
+                f.write(f"\n[{datetime.datetime.now()}] Error during close: {str(e)}\n")
+            event.accept()  # Her durumda kapanmaya izin ver
 
     def add_note(self, note):
         # Yeni not ekle
@@ -1451,8 +2278,153 @@ class MainWindow(QMainWindow):
         self.save_notes()
         self.statusBar().showMessage(f"Note added: {note.title}")
 
+    def update_tag_filter(self):
+        # Etiket filtreleme combobox'ını güncelle
+        current_tag = self.tag_filter_combo.currentText()
+        self.tag_filter_combo.clear()
+        self.tag_filter_combo.addItem("All Tags")
+        
+        # Tüm notların etiketlerini topla
+        all_tags = set()
+        for note in self.notes:
+            all_tags.update(note.tags)
+        
+        # Etiketleri alfabetik sırala ve combobox'a ekle
+        for tag in sorted(all_tags):
+            self.tag_filter_combo.addItem(tag)
+            
+        # Önceki seçimi geri al (mümkünse)
+        index = self.tag_filter_combo.findText(current_tag)
+        if index >= 0:
+            self.tag_filter_combo.setCurrentIndex(index)
+
+    def manage_categories(self):
+        # Varolan tüm kategorileri al
+        all_categories = set()
+        for note in self.notes:
+            all_categories.add(note.category)
+        
+        # Kategori yöneticisini göster
+        dialog = CategoryManager(self, list(all_categories))
+        if dialog.exec_() == QDialog.Accepted:
+            # Güncellenmiş kategorileri al
+            updated_categories = dialog.get_categories()
+            
+            # Kategori değişiklikleri uygulanmalı
+            category_map = {}
+            for old_cat in all_categories:
+                if old_cat not in updated_categories:
+                    # Kategorinin yeni adını sor
+                    new_cat, ok = QInputDialog.getItem(
+                        self, "Update Category", 
+                        f"Category '{old_cat}' was removed. Map notes to:",
+                        updated_categories, 0, False
+                    )
+                    if ok:
+                        category_map[old_cat] = new_cat
+                    else:
+                        category_map[old_cat] = "general"  # Varsayılan
+            
+            # Notları güncelle
+            for note in self.notes:
+                if note.category in category_map:
+                    note.category = category_map[note.category]
+            
+            # Not editörünün kategori listesini güncelle
+            self.note_editor.category_combo.clear()
+            for category in sorted(updated_categories):
+                self.note_editor.category_combo.addItem(category)
+            
+            # Not listesini güncelle
+            self.update_note_list()
+            self.save_notes()
+    
+    def manage_tags(self):
+        # Varolan tüm etiketleri al
+        all_tags = set()
+        for note in self.notes:
+            all_tags.update(note.tags)
+        
+        # Etiket yöneticisini göster
+        dialog = TagManager(self, list(all_tags))
+        if dialog.exec_() == QDialog.Accepted:
+            # Güncellenmiş etiketleri al
+            updated_tags = dialog.get_tags()
+            
+            # Etiket filtresini güncelle
+            self.update_tag_filter()
+
+    def update_category_combo(self):
+        # Not editörünün kategori combobox'ını güncelle
+        categories = set()
+        categories.add("general")  # Varsayılan kategori her zaman olsun
+        categories.add("work")
+        categories.add("personal")
+        categories.add("ideas")
+        categories.add("tasks")
+        
+        # Mevcut notlardan kategori ekle
+        for note in self.notes:
+            if note.category:
+                categories.add(note.category)
+                
+        # Combobox'ı güncelle
+        current_category = self.note_editor.category_combo.currentText()
+        self.note_editor.category_combo.clear()
+        
+        # Alfabetik sırala ve ekle
+        for category in sorted(categories):
+            self.note_editor.category_combo.addItem(category)
+            
+        # Eğer önceki seçim varsa, tekrar seç
+        index = self.note_editor.category_combo.findText(current_category)
+        if index >= 0:
+            self.note_editor.category_combo.setCurrentIndex(index)
+    
+    def load_notes(self):
+        try:
+            if os.path.exists('notes.json'):
+                with open('notes.json', 'r', encoding='utf-8') as file:
+                    notes_data = json.load(file)
+                    self.notes = [Note.from_dict(data) for data in notes_data]
+                self.update_note_list()
+                self.update_tag_filter()  # Etiket filtresini güncelle
+                self.update_category_combo()  # Kategori combobox'ını güncelle
+                self.statusBar().showMessage(f"{len(self.notes)} notes loaded.")
+            else:
+                self.statusBar().showMessage("Note file not found. You can create new notes.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error loading notes: {str(e)}")
+
+def handle_exception(exctype, value, traceback):
+    # Global hata yakalama fonksiyonu
+    error_message = f"{exctype.__name__}: {value}"
+    print(f"Error occurred: {error_message}")
+    
+    # Ana pencereyi bul
+    app = QApplication.instance()
+    for widget in app.topLevelWidgets():
+        if isinstance(widget, QMainWindow):
+            QMessageBox.critical(widget, "Error", 
+                               f"An unexpected error occurred:\n\n{error_message}\n\nThe application will try to continue.")
+            # Hatayı kaydet
+            try:
+                with open('error.log', 'a') as f:
+                    import datetime
+                    f.write(f"\n[{datetime.datetime.now()}] {error_message}\n")
+                    import traceback as tb
+                    tb.print_exc(file=f)
+            except:
+                pass
+            break
+    
+    sys.__excepthook__(exctype, value, traceback)
+
 def main():
     app = QApplication(sys.argv)
+    
+    # Global hata yakalayıcıyı kur
+    sys.excepthook = handle_exception
     
     # Set application style
     app.setStyle('Fusion')
@@ -1477,9 +2449,24 @@ def main():
     # Set application font
     app.setFont(QFont("Segoe UI", 9))
     
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+    try:
+        window = MainWindow()
+        window.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        # Ana hata yakalama
+        QMessageBox.critical(None, "Critical Error", 
+                           f"A critical error occurred during startup:\n\n{str(e)}\n\nThe application will now exit.")
+        # Hatayı kaydet
+        try:
+            with open('critical_error.log', 'a') as f:
+                import datetime
+                f.write(f"\n[{datetime.datetime.now()}] Critical Error: {str(e)}\n")
+                import traceback
+                traceback.print_exc(file=f)
+        except:
+            pass
+        sys.exit(1)
 
 if __name__ == "__main__":
     main() 
