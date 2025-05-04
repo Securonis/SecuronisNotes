@@ -13,12 +13,12 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                            QSpinBox, QColorDialog, QFontDialog, QMenuBar,
                            QMenu, QAction, QStatusBar, QToolBar, QToolButton,
                            QInputDialog, QSplitter, QStyle, QStyleFactory,
-                           QStyleOptionButton)
+                           QStyleOptionButton, QGroupBox)
 from PyQt5.QtCore import Qt, QSize, QTimer, QDateTime, QPropertyAnimation, QEasingCurve, pyqtSignal, QDate
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette, QTextCharFormat, QLinearGradient, QPainter
 from cryptography.fernet import Fernet
 
-# Securonis Notes GUI Developed by root0emir Version 2.5
+# Securonis Notes GUI Developed by root0emir Version 2.5 
 
 class ModernCheckBox(QCheckBox):
     def __init__(self, text, parent=None):
@@ -128,7 +128,8 @@ class CategoryManager(QDialog):
         """)
         
         layout = QVBoxLayout()
-
+        
+        # Current categories list
         category_label = QLabel("Current Categories:")
         category_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         layout.addWidget(category_label)
@@ -156,6 +157,7 @@ class CategoryManager(QDialog):
         """)
         layout.addWidget(self.category_list)
         
+        # Category add area
         add_layout = QHBoxLayout()
         self.new_category = QLineEdit()
         self.new_category.setPlaceholderText("Add new category...")
@@ -179,19 +181,19 @@ class CategoryManager(QDialog):
         add_layout.addWidget(add_button)
         layout.addLayout(add_layout)
         
-    
+        # Delete category button
         delete_button = ModernButton("Delete Selected")
         delete_button.clicked.connect(self.delete_category)
         layout.addWidget(delete_button)
         
-       
+        # Close button
         close_button = ModernButton("Close")
         close_button.clicked.connect(self.accept)
         layout.addWidget(close_button)
         
         self.setLayout(layout)
         
-  
+        # Fill category list
         self.update_category_list()
         
     def update_category_list(self):
@@ -235,7 +237,7 @@ class TagManager(QDialog):
         
         layout = QVBoxLayout()
         
- 
+        # Current tags list
         tag_label = QLabel("Current Tags:")
         tag_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         layout.addWidget(tag_label)
@@ -263,7 +265,7 @@ class TagManager(QDialog):
         """)
         layout.addWidget(self.tag_list)
         
-
+        # Tag add area
         add_layout = QHBoxLayout()
         self.new_tag = QLineEdit()
         self.new_tag.setPlaceholderText("Add new tag...")
@@ -287,19 +289,19 @@ class TagManager(QDialog):
         add_layout.addWidget(add_button)
         layout.addLayout(add_layout)
         
-
+        # Delete tag button
         delete_button = ModernButton("Delete Selected")
         delete_button.clicked.connect(self.delete_tag)
         layout.addWidget(delete_button)
         
-
+        # Close button
         close_button = ModernButton("Close")
         close_button.clicked.connect(self.accept)
         layout.addWidget(close_button)
         
         self.setLayout(layout)
         
-  
+        # Fill tag list
         self.update_tag_list()
         
     def update_tag_list(self):
@@ -328,7 +330,8 @@ class TagManager(QDialog):
 class Note:
     def __init__(self, title="", content="", tags=None, priority="low",
                  due_date=None, category="general", color="#ffffff",
-                 font_family="Arial", font_size=10, is_encrypted=False):
+                 font_family="Arial", font_size=10, is_encrypted=False,
+                 encryption_password_hash=None):
         self.title = title
         self.content = content
         self.tags = tags or []
@@ -339,6 +342,7 @@ class Note:
         self.font_family = font_family
         self.font_size = font_size
         self.is_encrypted = is_encrypted
+        self.encryption_password_hash = encryption_password_hash
         self.created_at = datetime.now()
         self.modified_at = datetime.now()
         self.attachments = []  
@@ -355,14 +359,15 @@ class Note:
                 self.created_at == other.created_at)
         
     def add_attachment(self, file_path):
-      
+        # File attachment function
         file_name = os.path.basename(file_path)
         
+        # File size check (10MB limit)
         file_size = os.path.getsize(file_path)
-        if file_size > 10 * 1024 * 1024:  
+        if file_size > 10 * 1024 * 1024:  # 10MB
             raise ValueError("File size exceeds the 10MB limit.")
             
-   
+        # Extension check
         allowed_extensions = ['.txt', '.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif']
         file_extension = os.path.splitext(file_name)[1].lower()
         if file_extension not in allowed_extensions:
@@ -371,10 +376,11 @@ class Note:
         try:
             with open(file_path, 'rb') as file:
                 file_content = file.read()
-      
+                # Base64 encoding
                 import base64
                 encoded_content = base64.b64encode(file_content).decode('utf-8')
                 
+                # File count limit (10 attachments)
                 if len(self.attachments) >= 10:
                     raise ValueError("Maximum 10 attachments allowed per note.")
                     
@@ -387,7 +393,7 @@ class Note:
                 })
                 return True
         except Exception as e:
-            print(f"Dosya ekleme hatası: {str(e)}")
+            print(f"File attachment error: {str(e)}")
             raise e
             
     def get_attachment(self, file_name):
@@ -411,6 +417,7 @@ class Note:
             'font_family': self.font_family,
             'font_size': self.font_size,
             'is_encrypted': self.is_encrypted,
+            'encryption_password_hash': self.encryption_password_hash if hasattr(self, 'encryption_password_hash') else None,
             'created_at': self.created_at.isoformat(),
             'modified_at': self.modified_at.isoformat(),
             'attachments': self.attachments,
@@ -421,14 +428,14 @@ class Note:
         
     @classmethod
     def from_dict(cls, data):
-
+        # Create Note object from dictionary
         note = cls()
         note.title = data.get('title', '')
         note.content = data.get('content', '')
         note.tags = data.get('tags', [])
         note.priority = data.get('priority', 'low')
         
-    
+        # Process date fields more safely
         try:
             note.due_date = datetime.fromisoformat(data.get('due_date', datetime.now().isoformat()))
         except (ValueError, TypeError):
@@ -449,9 +456,10 @@ class Note:
         note.font_family = data.get('font_family', 'Arial')
         note.font_size = data.get('font_size', 10)
         note.is_encrypted = data.get('is_encrypted', False)
+        note.encryption_password_hash = data.get('encryption_password_hash', None)
         note.attachments = data.get('attachments', [])
         
- 
+        # Process reminder field safely
         reminder_str = data.get('reminder')
         if reminder_str:
             try:
@@ -466,8 +474,8 @@ class Note:
         return note
 
 class NoteEditor(QWidget):
-    reminder_changed = pyqtSignal(int)  
-    attachment_changed = pyqtSignal(int)  
+    reminder_changed = pyqtSignal(int)  # Reminder change signal
+    attachment_changed = pyqtSignal(int)  # Attachment change signal
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -525,11 +533,9 @@ class NoteEditor(QWidget):
         
 
         bottom_layout = QHBoxLayout()
-        
 
         left_panel = QVBoxLayout()
         
-   
         tags_label = QLabel("Tags:")
         tags_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.tags_edit = QLineEdit()
@@ -586,10 +592,11 @@ class NoteEditor(QWidget):
         left_panel.addWidget(priority_label)
         left_panel.addWidget(self.priority_combo)
         
-
+   
         category_label = QLabel("Category:")
         category_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.category_combo = QComboBox()
+        self.category_combo.setEditable(False)
         self.category_combo.addItems(["general", "work", "personal", "ideas", "tasks"])
         self.category_combo.setStyleSheet("""
             QComboBox {
@@ -621,10 +628,12 @@ class NoteEditor(QWidget):
         left_panel.addWidget(category_label)
         left_panel.addWidget(self.category_combo)
         
-    
+
+        # Right panel (date, checkboxes)
         right_panel = QVBoxLayout()
         
-
+   
+        # Due date
         due_date_label = QLabel("Due Date:")
         due_date_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         self.due_date_edit = QLineEdit()
@@ -652,7 +661,7 @@ class NoteEditor(QWidget):
         right_panel.addWidget(due_date_label)
         right_panel.addLayout(due_date_layout)
         
-  
+
         check_label = QLabel("Options:")
         check_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
         right_panel.addWidget(check_label)
@@ -674,19 +683,19 @@ class NoteEditor(QWidget):
         self.reminder_check.stateChanged.connect(self.on_reminder_changed)
         right_panel.addWidget(self.reminder_check)
         
-
         self.attachment_check = ModernCheckBox("Attachments")
         self.attachment_check.stateChanged.connect(self.on_attachment_changed)
         right_panel.addWidget(self.attachment_check)
+        
 
         bottom_layout.addLayout(left_panel)
         bottom_layout.addLayout(right_panel)
         layout.addLayout(bottom_layout)
         
-
+ 
         button_layout = QHBoxLayout()
         
-
+     
         save_button = ModernButton("Save")
         save_button.setStyleSheet("""
             QPushButton {
@@ -708,7 +717,7 @@ class NoteEditor(QWidget):
         save_button.clicked.connect(self.save_note)
         button_layout.addWidget(save_button)
         
-  
+
         clear_button = ModernButton("Clear Form")
         clear_button.clicked.connect(self.clear_form)
         button_layout.addWidget(clear_button)
@@ -718,7 +727,7 @@ class NoteEditor(QWidget):
         color_button.clicked.connect(self.choose_color)
         button_layout.addWidget(color_button)
         
-      
+   
         font_button = ModernButton("Text Font")
         font_button.clicked.connect(self.choose_font)
         button_layout.addWidget(font_button)
@@ -785,7 +794,7 @@ class NoteEditor(QWidget):
         return parent
 
     def show_calendar(self):
- 
+
         dialog = QDialog(self)
         dialog.setWindowTitle("Select Date")
         dialog.setGeometry(300, 300, 400, 400)
@@ -893,7 +902,7 @@ class NoteList(QWidget):
         layout.setSpacing(10)
         layout.setContentsMargins(10, 10, 10, 10)
         
-  
+        # Search with modern styling
         search_layout = QHBoxLayout()
         search_label = QLabel("Search:")
         search_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
@@ -912,11 +921,12 @@ class NoteList(QWidget):
                 border: 1px solid #4d4d4d;
             }
         """)
+        self.search_edit.textChanged.connect(self.on_search_changed)
         search_layout.addWidget(search_label)
         search_layout.addWidget(self.search_edit)
         layout.addLayout(search_layout)
         
-
+        # Filters with modern styling
         filter_layout = QHBoxLayout()
         
         self.priority_filter = QComboBox()
@@ -926,66 +936,46 @@ class NoteList(QWidget):
                 background-color: #2d2d2d;
                 color: white;
                 border: 1px solid #3d3d3d;
-                padding: 8px;
+                padding: 6px;
                 border-radius: 4px;
                 font-size: 14px;
             }
-            QComboBox:hover {
+            QComboBox:focus {
                 border: 1px solid #4d4d4d;
             }
             QComboBox::drop-down {
-                border: none;
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
                 width: 20px;
+                border-left: 1px solid #3d3d3d;
             }
-            QComboBox::down-arrow {
-                image: url(down_arrow.png);
-                width: 12px;
-                height: 12px;
-            }
-        """)
-        filter_layout.addWidget(QLabel("Priority:"))
-        filter_layout.addWidget(self.priority_filter)
-        
-        self.category_filter = QComboBox()
-        self.category_filter.addItems(["All", "General", "Work", "Personal", "Ideas"])
-        self.category_filter.setEditable(True)
-        self.category_filter.setStyleSheet("""
-            QComboBox {
+            QComboBox QAbstractItemView {
                 background-color: #2d2d2d;
                 color: white;
-                border: 1px solid #3d3d3d;
-                padding: 8px;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-            QComboBox:hover {
-                border: 1px solid #4d4d4d;
-            }
-            QComboBox::drop-down {
-                border: none;
-                width: 20px;
-            }
-            QComboBox::down-arrow {
-                image: url(down_arrow.png);
-                width: 12px;
-                height: 12px;
+                selection-background-color: #4d4d4d;
+                selection-color: white;
             }
         """)
-        filter_layout.addWidget(QLabel("Category:"))
-        filter_layout.addWidget(self.category_filter)
+        self.priority_filter.currentIndexChanged.connect(self.on_filter_changed)
+        filter_layout.addWidget(QLabel("Priority:"))
+        filter_layout.addWidget(self.priority_filter)
         
         layout.addLayout(filter_layout)
         
         # View options
         view_layout = QHBoxLayout()
+        view_layout.setSpacing(10)
         
         self.show_favorites = ModernCheckBox("Show Favorites")
+        self.show_favorites.stateChanged.connect(self.on_filter_changed)
         view_layout.addWidget(self.show_favorites)
         
         self.show_archived = ModernCheckBox("Show Archived")
+        self.show_archived.stateChanged.connect(self.on_filter_changed)
         view_layout.addWidget(self.show_archived)
         
         self.show_encrypted = ModernCheckBox("Show Encrypted")
+        self.show_encrypted.stateChanged.connect(self.on_filter_changed)
         view_layout.addWidget(self.show_encrypted)
         
         layout.addLayout(view_layout)
@@ -1047,6 +1037,24 @@ class NoteList(QWidget):
     def on_note_clicked(self, item):
         note = item.data(Qt.UserRole)
         self.note_selected.emit(note)
+
+    def on_search_changed(self):
+        # Get the main window and trigger filter_notes
+        main_window = self.get_main_window()
+        if main_window:
+            main_window.filter_notes()
+            
+    def on_filter_changed(self):
+        # Get the main window and trigger filter_notes
+        main_window = self.get_main_window()
+        if main_window:
+            main_window.filter_notes()
+            
+    def get_main_window(self):
+        parent = self.parent()
+        while parent is not None and not isinstance(parent, QMainWindow):
+            parent = parent.parent()
+        return parent
 
 class CalendarView(QWidget):
     def __init__(self, parent=None):
@@ -1142,13 +1150,8 @@ class MainWindow(QMainWindow):
         self.notes = []
         self.current_note = None
         
-
-        try:
-            self.load_encryption_key()
-        except Exception as e:
-            QMessageBox.warning(self, "Encryption Error", 
-                              f"Error loading encryption key: {str(e)}\nEncryption features will be disabled.")
-            self.encryption_key = None
+        # Master password for session
+        self.master_password = None
         
         try:
             self.setup_ui()
@@ -1183,7 +1186,7 @@ class MainWindow(QMainWindow):
         # Create left panel (note list)
         left_panel = QVBoxLayout()
         
-    
+
         search_layout = QHBoxLayout()
         search_label = QLabel("Search:")
         search_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
@@ -1207,7 +1210,7 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(self.search_edit)
         left_panel.addLayout(search_layout)
         
- 
+  
         tag_filter_layout = QHBoxLayout()
         tag_filter_label = QLabel("Filter by tag:")
         tag_filter_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 14px;")
@@ -1259,6 +1262,11 @@ class MainWindow(QMainWindow):
         self.note_editor.reminder_changed.connect(self.setup_reminder)
         self.note_editor.attachment_changed.connect(self.handle_attachment)
         
+        # Connect NoteList filter signals from existing checkboxes
+        self.note_list.show_favorites.stateChanged.connect(self.filter_notes)
+        self.note_list.show_archived.stateChanged.connect(self.filter_notes)
+        self.note_list.show_encrypted.stateChanged.connect(self.filter_notes)
+        
         # Add panels to main layout
         main_layout.addLayout(left_panel, 1)
         main_layout.addLayout(right_panel, 2)
@@ -1270,7 +1278,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 1200, 800)
         self.setWindowIcon(QIcon("icon.png"))
         
-
+        # Statü çubuğu
         self.statusBar().setStyleSheet("background-color: #1d1d1d; color: white;")
         
         # Setup menu and toolbar
@@ -1311,44 +1319,44 @@ class MainWindow(QMainWindow):
             }
         """)
         
-        new_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_FileIcon)), "&New Note", self)
+        new_action = QAction("&New Note", self)
         new_action.setShortcut("Ctrl+N")
         new_action.triggered.connect(self.new_note)
         file_menu.addAction(new_action)
         
-        save_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton)), "&Save Note", self)
+        save_action = QAction("&Save Note", self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.save_note)
         file_menu.addAction(save_action)
         
-        delete_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_TrashIcon)), "&Delete Note", self)
+        delete_action = QAction("&Delete Note", self)
         delete_action.setShortcut("Delete")
         delete_action.triggered.connect(self.delete_note)
         file_menu.addAction(delete_action)
         
         file_menu.addSeparator()
         
-        backup_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogSaveButton)), "&Backup Notes", self)
+        backup_action = QAction("&Backup Notes", self)
         backup_action.triggered.connect(self.backup_notes)
         file_menu.addAction(backup_action)
         
-        restore_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogOpenButton)), "&Restore Notes", self)
+        restore_action = QAction("&Restore Notes", self)
         restore_action.triggered.connect(self.restore_notes)
         file_menu.addAction(restore_action)
         
         file_menu.addSeparator()
         
-        import_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_FileDialogListView)), "&Import Notes", self)
+        import_action = QAction("&Import Notes", self)
         import_action.triggered.connect(self.import_notes)
         file_menu.addAction(import_action)
         
-        export_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView)), "&Export Notes", self)
+        export_action = QAction("&Export Notes", self)
         export_action.triggered.connect(self.export_notes)
         file_menu.addAction(export_action)
         
         file_menu.addSeparator()
         
-        exit_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogCloseButton)), "&Exit", self)
+        exit_action = QAction("&Exit", self)
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
@@ -1369,15 +1377,15 @@ class MainWindow(QMainWindow):
             }
         """)
         
-        color_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogResetButton)), "Choose &Color", self)
+        color_action = QAction("Choose &Color", self)
         color_action.triggered.connect(self.choose_color)
         edit_menu.addAction(color_action)
         
-        font_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogResetButton)), "Choose &Font", self)
+        font_action = QAction("Choose &Font", self)
         font_action.triggered.connect(self.choose_font)
         edit_menu.addAction(font_action)
         
-        encrypt_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogResetButton)), "&Encrypt/Decrypt", self)
+        encrypt_action = QAction("&Encrypt/Decrypt", self)
         encrypt_action.triggered.connect(self.toggle_encryption)
         edit_menu.addAction(encrypt_action)
         
@@ -1423,24 +1431,17 @@ class MainWindow(QMainWindow):
             }
         """)
         
-        self.show_favorites_action = QAction("Show Only &Favorites", self)
-        self.show_favorites_action.setCheckable(True)
-        self.show_favorites_action.triggered.connect(self.toggle_favorites)
-        view_menu.addAction(self.show_favorites_action)
+        category_action = QAction("Manage &Categories", self)
+        category_action.triggered.connect(self.manage_categories)
+        view_menu.addAction(category_action)
         
-        self.show_archived_action = QAction("Show Only &Archived", self)
-        self.show_archived_action.setCheckable(True)
-        self.show_archived_action.triggered.connect(self.toggle_archived)
-        view_menu.addAction(self.show_archived_action)
-        
-        self.show_encrypted_action = QAction("Show Only &Encrypted", self)
-        self.show_encrypted_action.setCheckable(True)
-        self.show_encrypted_action.triggered.connect(self.filter_notes)
-        view_menu.addAction(self.show_encrypted_action)
+        tag_action = QAction("Manage &Tags", self)
+        tag_action.triggered.connect(self.manage_tags)
+        view_menu.addAction(tag_action)
         
         view_menu.addSeparator()
         
-        calendar_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogHelpButton)), "&Calendar View", self)
+        calendar_action = QAction("&Calendar View", self)
         calendar_action.triggered.connect(self.show_calendar)
         view_menu.addAction(calendar_action)
         
@@ -1460,7 +1461,7 @@ class MainWindow(QMainWindow):
             }
         """)
         
-        about_action = QAction(QIcon(self.style().standardIcon(QStyle.SP_DialogHelpButton)), "&About", self)
+        about_action = QAction("&About", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
         
@@ -1493,39 +1494,12 @@ class MainWindow(QMainWindow):
         
         toolbar.addSeparator()
         
-        # Format buttons
-        color_btn = QToolButton()
-        color_btn.setText("Color")
-        color_btn.setToolTip("Change Text Color")
-        color_btn.clicked.connect(self.choose_color)
-        toolbar.addWidget(color_btn)
-        
-        font_btn = QToolButton()
-        font_btn.setText("Font")
-        font_btn.setToolTip("Change Font")
-        font_btn.clicked.connect(self.choose_font)
-        toolbar.addWidget(font_btn)
-        
-        toolbar.addSeparator()
-        
-        # View buttons
+        # Calendar button only
         calendar_btn = QToolButton()
         calendar_btn.setText("Calendar")
         calendar_btn.setToolTip("Calendar View (Ctrl+Shift+C)")
         calendar_btn.clicked.connect(self.show_calendar)
         toolbar.addWidget(calendar_btn)
-        
-        favorites_btn = QToolButton()
-        favorites_btn.setText("Favorites")
-        favorites_btn.setToolTip("Show Favorites (Ctrl+Shift+F)")
-        favorites_btn.clicked.connect(self.toggle_favorites)
-        toolbar.addWidget(favorites_btn)
-        
-        archived_btn = QToolButton()
-        archived_btn.setText("Archived")
-        archived_btn.setToolTip("Show Archived (Ctrl+Shift+A)")
-        archived_btn.clicked.connect(self.toggle_archived)
-        toolbar.addWidget(archived_btn)
         
     def setup_reminder(self, state):
         if not self.current_note:
@@ -1604,7 +1578,7 @@ class MainWindow(QMainWindow):
             return
             
         if state:
-            # Eklenecek dosyayı seç
+            # Select file to attach
             file_path, _ = QFileDialog.getOpenFileName(
                 self, 
                 "Select File to Attach", 
@@ -1614,10 +1588,10 @@ class MainWindow(QMainWindow):
             
             if file_path:
                 try:
-                    # Dosya ekleme işlemi
+                    # Add file attachment
                     self.current_note.add_attachment(file_path)
                     
-                    # Dosya listesini göster
+                    # Show file list
                     attached_files = [att['name'] for att in self.current_note.attachments]
                     QMessageBox.information(
                         self, 
@@ -1625,21 +1599,21 @@ class MainWindow(QMainWindow):
                         f"Attached file: {os.path.basename(file_path)}\n\nTotal attachments: {len(attached_files)}"
                     )
                     
-             
+                    # Update note status
                     self.update_editor()
                     self.save_notes()
                 except ValueError as e:
-        
+                    # Validation errors
                     QMessageBox.warning(self, "Attachment Error", str(e))
                     self.note_editor.attachment_check.setChecked(False)
                 except Exception as e:
-      
+                    # Other errors
                     QMessageBox.critical(self, "Error", f"Error adding attachment: {str(e)}")
                     self.note_editor.attachment_check.setChecked(False)
         else:
-
+            # Attachment management
             if self.current_note.attachments:
-           
+                # File list
                 attachment_names = [att['name'] for att in self.current_note.attachments]
                 file_name, ok = QInputDialog.getItem(
                     self, 
@@ -1651,7 +1625,7 @@ class MainWindow(QMainWindow):
                 )
                 
                 if ok and file_name:
-       
+                    # Options menu
                     action, ok = QInputDialog.getItem(
                         self, 
                         "Attachment Options", 
@@ -1663,7 +1637,7 @@ class MainWindow(QMainWindow):
                     
                     if ok:
                         if action == "View/Open":
-                   
+                            # Save file temporarily and open
                             attachment_content = None
                             for att in self.current_note.attachments:
                                 if att['name'] == file_name:
@@ -1676,14 +1650,14 @@ class MainWindow(QMainWindow):
                                 import subprocess
                                 import platform
                                 
-                    
+                                # Create temporary file
                                 temp_dir = tempfile.gettempdir()
                                 temp_file_path = os.path.join(temp_dir, file_name)
                                 
                                 with open(temp_file_path, 'wb') as f:
                                     f.write(base64.b64decode(attachment_content))
                                 
-                      
+                                # Open file
                                 if platform.system() == 'Windows':
                                     os.startfile(temp_file_path)
                                 elif platform.system() == 'Darwin':  # macOS
@@ -1692,7 +1666,7 @@ class MainWindow(QMainWindow):
                                     subprocess.call(['xdg-open', temp_file_path])
                         
                         elif action == "Save to disk":
-          
+                            # Save file
                             save_path, _ = QFileDialog.getSaveFileName(
                                 self, 
                                 "Save Attachment", 
@@ -1718,7 +1692,7 @@ class MainWindow(QMainWindow):
                                     )
                         
                         elif action == "Delete":
-              
+                            # Delete file
                             reply = QMessageBox.question(
                                 self, 
                                 "Confirm Delete", 
@@ -1738,11 +1712,11 @@ class MainWindow(QMainWindow):
                                     f"Attachment {file_name} deleted."
                                 )
                                 
-                         
+                                # Update note status
                                 self.update_editor()
                                 self.save_notes()
                 
-    
+                # Checkbox durumunu güncelle
                 self.note_editor.attachment_check.setChecked(len(self.current_note.attachments) > 0)
             else:
                 QMessageBox.information(
@@ -1752,55 +1726,50 @@ class MainWindow(QMainWindow):
                 )
                 self.note_editor.attachment_check.setChecked(False)
         
-    def toggle_favorites(self):
-
-        if hasattr(self, 'show_favorites_action'):
-            self.show_favorites_action.setChecked(not self.show_favorites_action.isChecked())
-        self.filter_notes()
-        
-    def toggle_archived(self):
-
-        if hasattr(self, 'show_archived_action'):
-            self.show_archived_action.setChecked(not self.show_archived_action.isChecked())
-        self.filter_notes()
-        
     def filter_notes(self):
-
+        # Filter notes (search and tag filters)
         search_text = self.search_edit.text().lower() if hasattr(self, 'search_edit') else ""
         selected_tag = self.tag_filter_combo.currentText() if hasattr(self, 'tag_filter_combo') else "All Tags"
         
-
-        show_favorites = self.show_favorites_action.isChecked() if hasattr(self, 'show_favorites_action') else False
-        show_archived = self.show_archived_action.isChecked() if hasattr(self, 'show_archived_action') else False
-        show_encrypted = self.show_encrypted_action.isChecked() if hasattr(self, 'show_encrypted_action') else False
+        # Priority filter
+        selected_priority = self.note_list.priority_filter.currentText().lower() if hasattr(self.note_list, 'priority_filter') else "all"
         
-
+        # Favorites, archive and encryption filters
+        # Use the checkboxes from the sidebar instead of menu actions
+        show_favorites = self.note_list.show_favorites.isChecked() if hasattr(self.note_list, 'show_favorites') else False
+        show_archived = self.note_list.show_archived.isChecked() if hasattr(self.note_list, 'show_archived') else False
+        show_encrypted = self.note_list.show_encrypted.isChecked() if hasattr(self.note_list, 'show_encrypted') else False
+        
+        # Clear note list
         self.note_list.note_list.clear()
         
-
+        # Apply filters
         for note in self.notes:
-       
+            # Search filter
             title_match = search_text in note.title.lower()
             content_match = search_text in note.content.lower()
             tags_match = any(search_text in tag.lower() for tag in note.tags)
             search_match = title_match or content_match or tags_match
             
-      
+            # Tag filter
             tag_match = (selected_tag == "All Tags" or selected_tag in note.tags)
-                
-
-            favorite_match = (not show_favorites or note.is_favorite)
-            archived_match = (not show_archived or note.is_archived)
-            encrypted_match = (not show_encrypted or note.is_encrypted)
             
-    
-            if (search_match and tag_match and favorite_match and
+            # Priority filter
+            priority_match = (selected_priority == "all" or note.priority.lower() == selected_priority.lower())
+                
+            # Other filters - changed the logic to show only if checked
+            favorite_match = (not show_favorites or (show_favorites and note.is_favorite))
+            archived_match = (not show_archived or (show_archived and note.is_archived))
+            encrypted_match = (not show_encrypted or (show_encrypted and note.is_encrypted))
+            
+            # Add note to list if all filters match
+            if (search_match and tag_match and priority_match and favorite_match and
                 archived_match and encrypted_match):
                 item = QListWidgetItem(note.title)
                 item.setData(Qt.UserRole, note)
                 self.note_list.note_list.addItem(item)
         
-   
+        # Update statistics
         self.note_list.update_statistics(self.notes)
         
     def new_note(self):
@@ -1811,7 +1780,8 @@ class MainWindow(QMainWindow):
         if not self.current_note:
             self.current_note = Note()
             
-
+        # Veri doğrulama
+        # Data validation
         title = self.note_editor.title_edit.text().strip()
         if not title:
             QMessageBox.warning(self, "Validation Error", "Title cannot be empty.")
@@ -1824,7 +1794,8 @@ class MainWindow(QMainWindow):
             self.note_editor.content_edit.setFocus()
             return
             
-     
+
+        # Date format validation
         due_date_str = self.note_editor.due_date_edit.text()
         try:
             due_date = datetime.strptime(due_date_str, "%Y-%m-%d %H:%M")
@@ -1833,24 +1804,36 @@ class MainWindow(QMainWindow):
             self.note_editor.due_date_edit.setFocus()
             return
             
-
+        # Check if encryption status has changed
+        encrypt_checkbox_checked = self.note_editor.encrypt_check.isChecked()
+        
+        # Update note data from editor
         self.current_note.title = title
         self.current_note.content = content
         self.current_note.tags = [tag.strip() for tag in self.note_editor.tags_edit.text().split(",") if tag.strip()]
         self.current_note.priority = self.note_editor.priority_combo.currentText()
         self.current_note.category = self.note_editor.category_combo.currentText()
         self.current_note.due_date = due_date
-        self.current_note.is_encrypted = self.note_editor.encrypt_check.isChecked()
         self.current_note.is_favorite = self.note_editor.favorite_check.isChecked()
         self.current_note.is_archived = self.note_editor.archive_check.isChecked()
         self.current_note.modified_at = datetime.now()
+        
+        # Handle encryption if the encryption status has changed
+        if encrypt_checkbox_checked != self.current_note.is_encrypted:
+            if encrypt_checkbox_checked:
+                # Need to encrypt the note
+                self.toggle_encryption()
+                # If encryption was cancelled, update checkbox to match actual state
+                self.note_editor.encrypt_check.setChecked(self.current_note.is_encrypted)
+                if not self.current_note.is_encrypted:
+                    QMessageBox.information(self, "Information", "Encryption was cancelled.")
         
         # Add or update note in list
         if self.current_note not in self.notes:
             self.notes.append(self.current_note)
             
         self.update_note_list()
-        self.update_tag_filter()  
+        self.update_tag_filter()  # Update tag filter
         self.save_notes()
         
         QMessageBox.information(self, "Success", "Note saved successfully!")
@@ -1916,6 +1899,7 @@ class MainWindow(QMainWindow):
             self.note_list.note_list.addItem(item)
             
     def show_calendar(self):
+        # Calendar widget for date selection dialog
         dialog = QDialog(self)
         dialog.setWindowTitle("Calendar View")
         dialog.setGeometry(200, 200, 800, 600)
@@ -2072,7 +2056,7 @@ class MainWindow(QMainWindow):
                 
     def show_about(self):
         QMessageBox.about(self, "About Advanced Notes",
-                         "Securonis Notes v1.8\n\n"
+                         "Securonis Notes v2.5\n\n"
                          "A modern note-taking application.\n"
                          "Developed by root0emir")
                          
@@ -2090,38 +2074,45 @@ class MainWindow(QMainWindow):
         if not self.current_note:
             return
             
-        if not self.encryption_key:
-            QMessageBox.warning(self, "Warning", 
-                              "Encryption key not available. Please restart the application and enter the correct password.")
-            return
-            
         if not self.current_note.is_encrypted:
-            try:
-                f = Fernet(self.encryption_key)
-                self.current_note.content = f.encrypt(
-                    self.current_note.content.encode()).decode()
-                self.current_note.is_encrypted = True
-                self.statusBar().showMessage("Note encrypted")
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Encryption error: {str(e)}")
-        else:
-            try:
-                f = Fernet(self.encryption_key)
-                self.current_note.content = f.decrypt(
-                    self.current_note.content.encode()).decode()
-                self.current_note.is_encrypted = False
-                self.statusBar().showMessage("Note decrypted")
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Decryption error: {str(e)}")
+            # If no master password set, ask for one
+            if not self.master_password:
+                password, ok = QInputDialog.getText(
+                    self, "Set Master Password", 
+                    "Enter master password for encrypted notes:", 
+                    QLineEdit.Password
+                )
+                
+                if ok and password:
+                    self.master_password = password
+                else:
+                    QMessageBox.information(self, "Cancelled", "Note will not be encrypted without a password.")
+                    return
             
+            # Just mark the note as encrypted
+            self.current_note.is_encrypted = True
+            self.note_editor.encrypt_check.setChecked(True)
+            self.statusBar().showMessage("Note marked for encryption. It will be encrypted when saved.")
+        else:
+            # Unmark the note as encrypted
+            self.current_note.is_encrypted = False
+            self.note_editor.encrypt_check.setChecked(False)
+            if hasattr(self.current_note, 'encryption_password_hash'):
+                delattr(self.current_note, 'encryption_password_hash')
+            self.statusBar().showMessage("Note will no longer be encrypted when saved.")
+        
         self.update_editor()
         
     def load_encryption_key(self):
+        import base64
+        import hashlib
+        import os
+        
         key_file = 'encryption_key.key'
         
-
+        # Check if encryption key exists
         if os.path.exists(key_file):
-   
+            # Ask for password
             password, ok = QInputDialog.getText(
                 self, "Enter Password", 
                 "Enter encryption password:", 
@@ -2129,39 +2120,71 @@ class MainWindow(QMainWindow):
             )
             
             if not ok:
-                QMessageBox.warning(self, "Warning", 
-                                   "Encryption key not loaded. Some features may not work.")
-                self.encryption_key = None
-                return
+                # User canceled - exit application for existing key file
+                QMessageBox.warning(self, "Authentication Required", 
+                                   "Authentication is required to use this application.")
+       
+                os._exit(1)
             
             try:
-            
+                # Load key from file
                 with open(key_file, 'rb') as file:
-                    encrypted_key = file.read()
+                    stored_key_data = file.read()
                 
-     
-                import hashlib
-              
+                
+         
                 key_from_password = hashlib.sha256(password.encode()).digest()
-                f = Fernet(Fernet.generate_key())
-           
-                import base64
-                key_bytes = base64.urlsafe_b64decode(encrypted_key)
-                
-        
-                decrypted_key = bytes(a ^ b for a, b in zip(key_bytes, key_from_password))
                 
         
                 try:
-                    Fernet(decrypted_key)
-                    self.encryption_key = decrypted_key
+                    encrypted_bytes = base64.urlsafe_b64decode(stored_key_data)
                 except Exception:
-                    QMessageBox.critical(self, "Error", "Invalid password or corrupted key.")
-                    self.encryption_key = None
+                    QMessageBox.critical(self, "Authentication Failed", 
+                                      "Stored key is corrupted. Authentication cannot continue.")
+                    os._exit(1)
+                
+          
+                decrypted_bytes = bytearray()
+                for i in range(len(encrypted_bytes)):
+                    decrypted_bytes.append(encrypted_bytes[i] ^ key_from_password[i % len(key_from_password)])
+                
+            
+                if len(decrypted_bytes) != 32:
+             
+                    QMessageBox.critical(self, "Authentication Failed", 
+                                      "Invalid password. Decryption key length mismatch.")
+                    os._exit(1)
+                
+             
+                try:
+                    fernet_key = base64.urlsafe_b64encode(bytes(decrypted_bytes))
+                    
+                   
+                    test_fernet = Fernet(fernet_key)
+         
+                    test_message = b"test_message"
+                    encrypted_test = test_fernet.encrypt(test_message)
+                    decrypted_test = test_fernet.decrypt(encrypted_test)
+                    
+                    if decrypted_test != test_message:
+                        QMessageBox.critical(self, "Authentication Failed", 
+                                         "Invalid password. Decryption test failed.")
+                        os._exit(1)
+                    
+                    # Şifre doğru, anahtarı kaydediyoruz
+                    self.encryption_key = fernet_key
+                except Exception as e:
+                    QMessageBox.critical(self, "Authentication Failed", 
+                                      f"Invalid password or corrupted key: {str(e)}")
+                    os._exit(1)
+                    
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Error loading encryption key: {str(e)}")
-                self.encryption_key = None
+                QMessageBox.critical(self, "Authentication Failed", 
+                                   f"Error during authentication: {str(e)}")
+                os._exit(1)
         else:
+            # First use - create new key
+            # Ask for password
             while True:
                 password, ok = QInputDialog.getText(
                     self, "Create Password", 
@@ -2170,12 +2193,12 @@ class MainWindow(QMainWindow):
                 )
                 
                 if not ok:
-            
-                    self.encryption_key = Fernet.generate_key()
-                    QMessageBox.warning(self, "Warning", 
-                                       "Using default encryption. Notes will not be securely encrypted.")
-                    break
-
+                    # User canceled - exit application for new key setup
+                    QMessageBox.warning(self, "Password Required", 
+                                       "You must set up a password to use this application.")
+                    os._exit(1)
+                
+                # Validate password
                 if len(password) < 8:
                     QMessageBox.warning(self, "Warning", "Password must be at least 8 characters.")
                     continue
@@ -2190,78 +2213,244 @@ class MainWindow(QMainWindow):
                     QMessageBox.warning(self, "Warning", "Passwords don't match. Try again.")
                     continue
                 
-  
-                self.encryption_key = Fernet.generate_key()
-                
-
-                import hashlib
- 
-                key_from_password = hashlib.sha256(password.encode()).digest()
-                
-      
-                key_bytes = base64.urlsafe_b64decode(self.encryption_key)
-                encrypted_key = bytes(a ^ b for a, b in zip(key_bytes, key_from_password))
-                
+                try:
+            
+                    raw_key = os.urandom(32)  # Generate 32 random bytes
+                    
+               
+                    key_from_password = hashlib.sha256(password.encode()).digest()
+                    
+             
+                    encrypted_bytes = bytearray()
+                    for i in range(len(raw_key)):
+                        encrypted_bytes.append(raw_key[i] ^ key_from_password[i % len(key_from_password)])
+                    
+                    with open(key_file, 'wb') as file:
+                        file.write(base64.urlsafe_b64encode(encrypted_bytes))
+                    
+            
+                    self.encryption_key = base64.urlsafe_b64encode(raw_key)
+                    
+                    test_fernet = Fernet(self.encryption_key)
+                    test_message = b"test_message"
+                    encrypted_test = test_fernet.encrypt(test_message)
+                    decrypted_test = test_fernet.decrypt(encrypted_test)
+                    
+                    if decrypted_test != test_message:
+                        raise ValueError("Encryption key validation failed")
+                    
+                    QMessageBox.information(self, "Success", 
+                                          "Encryption key created and secured with your password.")
+                    break
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Error creating encryption key: {str(e)}")
+                    os._exit(1)
         
-                with open(key_file, 'wb') as file:
-                    file.write(base64.urlsafe_b64encode(encrypted_key))
-                
-                QMessageBox.information(self, "Success", 
-                                       "Encryption key created and secured with your password.")
-                break
-                
+        # Final check to ensure encryption key is valid
+        if self.encryption_key is None:
+            QMessageBox.critical(self, "Authentication Failed", 
+                                "Could not create or validate encryption key. Application will close.")
+            os._exit(1)
+        
     def check_reminders(self):
-
+        # Check reminders
         current_time = datetime.now()
         for note in self.notes:
             if note.reminder and note.reminder <= current_time:
-     
-                QMessageBox.information(self, "Hatırlatıcı", 
-                                       f"Not: {note.title}\n\n{note.content}")
-       
+                # Reminder time reached
+                QMessageBox.information(self, "Reminder", 
+                                       f"Note: {note.title}\n\n{note.content}")
+                # Clear reminder
                 note.reminder = None
                 self.save_notes()
         
+    def save_notes(self):
+        try:
+            serialized_notes = []
+            
+            # Check if we need to ask for master password
+            encrypted_notes_exist = any(note.is_encrypted for note in self.notes)
+            
+            if encrypted_notes_exist and not self.master_password:
+                # Ask for master password once for all encrypted notes
+                password, ok = QInputDialog.getText(
+                    self, "Set Encryption Password", 
+                    "Enter master password for encrypted notes:", 
+                    QLineEdit.Password
+                )
+                
+                if ok and password:
+                    self.master_password = password
+                else:
+                    reply = QMessageBox.question(self, "No Password",
+                        "Without a password, encrypted notes will be saved unencrypted. Continue?",
+                        QMessageBox.Yes | QMessageBox.No)
+                    
+                    if reply == QMessageBox.No:
+                        QMessageBox.information(self, "Save Cancelled", "Notes were not saved.")
+                        return
+            
+            for note in self.notes:
+                note_dict = note.to_dict()
+                
+                # Encrypt the content if encryption is enabled
+                if note.is_encrypted and self.master_password:
+                    try:
+                        import hashlib
+                        import base64
+                        from cryptography.fernet import Fernet
+                        
+                        # Create key from password
+                        key_bytes = hashlib.sha256(self.master_password.encode()).digest()
+                        encryption_key = base64.urlsafe_b64encode(key_bytes)
+                        
+                        # Store password hash for verification
+                        note_dict['encryption_password_hash'] = hashlib.sha256(self.master_password.encode()).hexdigest()
+                        
+                        # Encrypt content
+                        fernet = Fernet(encryption_key)
+                        encrypted_content = fernet.encrypt(note_dict['content'].encode('utf-8'))
+                        note_dict['content'] = encrypted_content.decode('utf-8')
+                    except Exception as e:
+                        QMessageBox.warning(self, "Encryption Error", 
+                                           f"Could not encrypt note '{note.title}': {str(e)}")
+                        note_dict['is_encrypted'] = False
+                elif note.is_encrypted and not self.master_password:
+                    # No master password but note is marked as encrypted
+                    # Save unencrypted but inform user
+                    note_dict['is_encrypted'] = False
+                
+                serialized_notes.append(note_dict)
+                
+            with open('notes.json', 'w', encoding='utf-8') as file:
+                json.dump(serialized_notes, file, ensure_ascii=False, indent=2)
+                
+            self.statusBar().showMessage(f"{len(self.notes)} notes saved.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error saving notes: {str(e)}")
+            
     def load_notes(self):
         try:
             if os.path.exists('notes.json'):
                 with open('notes.json', 'r', encoding='utf-8') as file:
                     notes_data = json.load(file)
-                    self.notes = [Note.from_dict(data) for data in notes_data]
+                    
+                    # Check if there are encrypted notes and collect their password hashes
+                    has_encrypted_notes = False
+                    password_hashes = set()
+                    
+                    for data in notes_data:
+                        if data.get('is_encrypted', False):
+                            has_encrypted_notes = True
+                            hash_value = data.get('encryption_password_hash')
+                            if hash_value:
+                                password_hashes.add(hash_value)
+                    
+                    # Ask for master password only once if there are encrypted notes
+                    if has_encrypted_notes:
+                        password, ok = QInputDialog.getText(
+                            self, "Enter Master Password", 
+                            "Enter master password to decrypt notes:", 
+                            QLineEdit.Password
+                        )
+                        
+                        if not ok:
+                            # User cancelled password dialog
+                            QMessageBox.critical(self, "Authentication Required", 
+                                "Password is required to access encrypted notes. Application will exit.")
+                            os._exit(0)
+                            return
+                            
+                        # Verify if the password matches at least one encrypted note
+                        if password:
+                            import hashlib
+                            entered_hash = hashlib.sha256(password.encode()).hexdigest()
+                            
+                            if entered_hash not in password_hashes:
+                                QMessageBox.critical(self, "Incorrect Password", 
+                                    "The password you entered is incorrect. Application will exit.")
+                                os._exit(0)
+                                return
+                            
+                            # Password is correct
+                            self.master_password = password
+                        else:
+                            # Empty password
+                            QMessageBox.critical(self, "Password Required",
+                                "Password cannot be empty. Application will exit.")
+                            os._exit(0)
+                            return
+                    
+                    loaded_notes = []
+                    for data in notes_data:
+                        is_encrypted = data.get('is_encrypted', False)
+                        
+                        if is_encrypted and self.master_password:
+                            # Try to decrypt with master password
+                            content = data.get('content', '')
+                            password_hash = data.get('encryption_password_hash')
+                            
+                            if content and password_hash:
+                                import hashlib
+                                import base64
+                                from cryptography.fernet import Fernet
+                                
+                                # Verify password hash
+                                entered_hash = hashlib.sha256(self.master_password.encode()).hexdigest()
+                                
+                                if entered_hash == password_hash:
+                                    try:
+                                        # Create key from password
+                                        key_bytes = hashlib.sha256(self.master_password.encode()).digest()
+                                        encryption_key = base64.urlsafe_b64encode(key_bytes)
+                                        
+                                        # Decrypt content
+                                        fernet = Fernet(encryption_key)
+                                        decrypted_content = fernet.decrypt(content.encode('utf-8'))
+                                        data['content'] = decrypted_content.decode('utf-8')
+                                    except Exception as e:
+                                        # If decryption fails, show placeholder
+                                        data['content'] = f"[Encrypted note - could not decrypt: {str(e)}]"
+                                else:
+                                    # This shouldn't happen with a single master password,
+                                    # but we'll handle it just in case
+                                    data['content'] = "[Encrypted note - password mismatch]"
+                            else:
+                                # Corrupted encrypted note
+                                data['content'] = "[Encrypted note - missing data]"
+                        elif is_encrypted and not self.master_password:
+                            # No master password provided (should not happen with our checks)
+                            data['content'] = "[Encrypted note - no password provided]"
+                            
+                        loaded_notes.append(Note.from_dict(data))
+                    
+                    self.notes = loaded_notes
+                    
                 self.update_note_list()
-                self.update_tag_filter()  
+                self.update_tag_filter()
                 self.update_category_combo()
                 self.statusBar().showMessage(f"{len(self.notes)} notes loaded.")
             else:
                 self.statusBar().showMessage("Note file not found. You can create new notes.")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error loading notes: {str(e)}")
-            
-    def save_notes(self):
-        try:
-            with open('notes.json', 'w', encoding='utf-8') as file:
-                notes_data = [note.to_dict() for note in self.notes]
-                json.dump(notes_data, file, ensure_ascii=False, indent=2)
-            self.statusBar().showMessage(f"{len(self.notes)} notes saved.")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error saving notes: {str(e)}")
-            
+            os._exit(1)
+
     def closeEvent(self, event):
         try:
             self.save_notes()
-
             if hasattr(self, 'reminder_timer'):
                 self.reminder_timer.stop()
             event.accept()
         except Exception as e:
-     
+                
             with open('error.log', 'a') as f:
                 import datetime
                 f.write(f"\n[{datetime.datetime.now()}] Error during close: {str(e)}\n")
-            event.accept()  
+            event.accept()     
 
     def add_note(self, note):
-  
+        # Add new note
         self.notes.append(note)
         self.current_note = note
         self.update_note_list()
@@ -2269,41 +2458,42 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Note added: {note.title}")
 
     def update_tag_filter(self):
-
+        # Update tag filter combo box
         current_tag = self.tag_filter_combo.currentText()
         self.tag_filter_combo.clear()
         self.tag_filter_combo.addItem("All Tags")
         
-   
+        # Collect all tags from notes
         all_tags = set()
         for note in self.notes:
             all_tags.update(note.tags)
         
- 
+        # Add tags alphabetically sorted to combo box
         for tag in sorted(all_tags):
             self.tag_filter_combo.addItem(tag)
             
-   
+        # Restore previous selection (if possible)
         index = self.tag_filter_combo.findText(current_tag)
         if index >= 0:
             self.tag_filter_combo.setCurrentIndex(index)
 
     def manage_categories(self):
+        # Get all existing categories
         all_categories = set()
         for note in self.notes:
             all_categories.add(note.category)
         
-
+        # Show category manager
         dialog = CategoryManager(self, list(all_categories))
         if dialog.exec_() == QDialog.Accepted:
-
+            # Get updated categories
             updated_categories = dialog.get_categories()
             
-  
+            # Apply category changes
             category_map = {}
             for old_cat in all_categories:
                 if old_cat not in updated_categories:
-  
+                    # Ask for new category name
                     new_cat, ok = QInputDialog.getItem(
                         self, "Update Category", 
                         f"Category '{old_cat}' was removed. Map notes to:",
@@ -2312,60 +2502,60 @@ class MainWindow(QMainWindow):
                     if ok:
                         category_map[old_cat] = new_cat
                     else:
-                        category_map[old_cat] = "general"  
+                        category_map[old_cat] = "general"  # Default
             
-       
+            # Update notes
             for note in self.notes:
                 if note.category in category_map:
                     note.category = category_map[note.category]
             
-   
+            # Update category list in note editor
             self.note_editor.category_combo.clear()
             for category in sorted(updated_categories):
                 self.note_editor.category_combo.addItem(category)
             
-    
+            # Update note list
             self.update_note_list()
             self.save_notes()
-    
+            
     def manage_tags(self):
-
+        # Varolan tüm etiketleri al
         all_tags = set()
         for note in self.notes:
             all_tags.update(note.tags)
         
-
+        # Etiket yöneticisini göster
         dialog = TagManager(self, list(all_tags))
         if dialog.exec_() == QDialog.Accepted:
-    
+            # Güncellenmiş etiketleri al
             updated_tags = dialog.get_tags()
             
-           
+            # Etiket filtresini güncelle
             self.update_tag_filter()
 
     def update_category_combo(self):
-
+        # Update the category combo box in note editor
         categories = set()
-        categories.add("general")  
+        categories.add("general")  # Default category should always be present
         categories.add("work")
         categories.add("personal")
         categories.add("ideas")
         categories.add("tasks")
         
-  
+        # Add categories from existing notes
         for note in self.notes:
             if note.category:
                 categories.add(note.category)
                 
-
+        # Update combo box
         current_category = self.note_editor.category_combo.currentText()
         self.note_editor.category_combo.clear()
         
-
+        # Sort alphabetically and add
         for category in sorted(categories):
             self.note_editor.category_combo.addItem(category)
             
-
+        # Restore previous selection if possible
         index = self.note_editor.category_combo.findText(current_category)
         if index >= 0:
             self.note_editor.category_combo.setCurrentIndex(index)
@@ -2375,28 +2565,119 @@ class MainWindow(QMainWindow):
             if os.path.exists('notes.json'):
                 with open('notes.json', 'r', encoding='utf-8') as file:
                     notes_data = json.load(file)
-                    self.notes = [Note.from_dict(data) for data in notes_data]
+                    
+                    # Check if there are encrypted notes and collect their password hashes
+                    has_encrypted_notes = False
+                    password_hashes = set()
+                    
+                    for data in notes_data:
+                        if data.get('is_encrypted', False):
+                            has_encrypted_notes = True
+                            hash_value = data.get('encryption_password_hash')
+                            if hash_value:
+                                password_hashes.add(hash_value)
+                    
+                    # Ask for master password only once if there are encrypted notes
+                    if has_encrypted_notes:
+                        password, ok = QInputDialog.getText(
+                            self, "Enter Master Password", 
+                            "Enter master password to decrypt notes:", 
+                            QLineEdit.Password
+                        )
+                        
+                        if not ok:
+                            # User cancelled password dialog
+                            QMessageBox.critical(self, "Authentication Required", 
+                                "Password is required to access encrypted notes. Application will exit.")
+                            os._exit(0)
+                            return
+                            
+                        # Verify if the password matches at least one encrypted note
+                        if password:
+                            import hashlib
+                            entered_hash = hashlib.sha256(password.encode()).hexdigest()
+                            
+                            if entered_hash not in password_hashes:
+                                QMessageBox.critical(self, "Incorrect Password", 
+                                    "The password you entered is incorrect. Application will exit.")
+                                os._exit(0)
+                                return
+                            
+                            # Password is correct
+                            self.master_password = password
+                        else:
+                            # Empty password
+                            QMessageBox.critical(self, "Password Required",
+                                "Password cannot be empty. Application will exit.")
+                            os._exit(0)
+                            return
+                    
+                    loaded_notes = []
+                    for data in notes_data:
+                        is_encrypted = data.get('is_encrypted', False)
+                        
+                        if is_encrypted and self.master_password:
+                            # Try to decrypt with master password
+                            content = data.get('content', '')
+                            password_hash = data.get('encryption_password_hash')
+                            
+                            if content and password_hash:
+                                import hashlib
+                                import base64
+                                from cryptography.fernet import Fernet
+                                
+                                # Verify password hash
+                                entered_hash = hashlib.sha256(self.master_password.encode()).hexdigest()
+                                
+                                if entered_hash == password_hash:
+                                    try:
+                                        # Create key from password
+                                        key_bytes = hashlib.sha256(self.master_password.encode()).digest()
+                                        encryption_key = base64.urlsafe_b64encode(key_bytes)
+                                        
+                                        # Decrypt content
+                                        fernet = Fernet(encryption_key)
+                                        decrypted_content = fernet.decrypt(content.encode('utf-8'))
+                                        data['content'] = decrypted_content.decode('utf-8')
+                                    except Exception as e:
+                                        # If decryption fails, show placeholder
+                                        data['content'] = f"[Encrypted note - could not decrypt: {str(e)}]"
+                                else:
+                                    # This shouldn't happen with a single master password,
+                                    # but we'll handle it just in case
+                                    data['content'] = "[Encrypted note - password mismatch]"
+                            else:
+                                # Corrupted encrypted note
+                                data['content'] = "[Encrypted note - missing data]"
+                        elif is_encrypted and not self.master_password:
+                            # No master password provided (should not happen with our checks)
+                            data['content'] = "[Encrypted note - no password provided]"
+                            
+                        loaded_notes.append(Note.from_dict(data))
+                    
+                    self.notes = loaded_notes
+                    
                 self.update_note_list()
-                self.update_tag_filter()  
-                self.update_category_combo()  
+                self.update_tag_filter()
+                self.update_category_combo()
                 self.statusBar().showMessage(f"{len(self.notes)} notes loaded.")
             else:
                 self.statusBar().showMessage("Note file not found. You can create new notes.")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error loading notes: {str(e)}")
+            os._exit(1)
 
 def handle_exception(exctype, value, traceback):
 
     error_message = f"{exctype.__name__}: {value}"
     print(f"Error occurred: {error_message}")
-    
-
+  
     app = QApplication.instance()
     for widget in app.topLevelWidgets():
         if isinstance(widget, QMainWindow):
             QMessageBox.critical(widget, "Error", 
                                f"An unexpected error occurred:\n\n{error_message}\n\nThe application will try to continue.")
-       
+   
             try:
                 with open('error.log', 'a') as f:
                     import datetime
@@ -2409,9 +2690,107 @@ def handle_exception(exctype, value, traceback):
     
     sys.__excepthook__(exctype, value, traceback)
 
+def validate_password():
+    import os
+    import base64
+    import hashlib
+    from cryptography.fernet import Fernet
+    from PyQt5.QtWidgets import QInputDialog, QMessageBox, QApplication, QLineEdit
+    import sys
+    
+    global global_encryption_key
+    
+    try:
+        # Temporary application to show dialogs
+        temp_app = QApplication(sys.argv) if not QApplication.instance() else QApplication.instance()
+        
+        key_file = 'encryption_key.key'
+        
+        # If key file exists, ask for password
+        if os.path.exists(key_file):
+            password, ok = QInputDialog.getText(
+                None, "Securonis Notes - Authentication", 
+                "Enter encryption password:", 
+                QLineEdit.Password
+            )
+            
+            if not ok:
+                # User canceled
+                print("Authentication required")
+                return False
+            
+            try:
+                # Simple key derivation from password
+                key_bytes = hashlib.sha256(password.encode()).digest()
+                # Create Fernet key from password hash
+                global_encryption_key = base64.urlsafe_b64encode(key_bytes)
+                
+                # Test key validity
+                test_fernet = Fernet(global_encryption_key)
+                return True
+                
+            except Exception as e:
+                print(f"Authentication error: {str(e)}")
+                return False
+        else:
+            # First time use - create a new password
+            password, ok = QInputDialog.getText(
+                None, "Securonis Notes - Create Password", 
+                "Create encryption password (min 8 chars):", 
+                QLineEdit.Password
+            )
+            
+            if not ok:
+                # User canceled
+                print("Password creation required")
+                return False
+                
+            if len(password) < 8:
+                QMessageBox.warning(None, "Warning", "Password must be at least 8 characters.")
+                return False
+                
+            # Confirm password
+            confirm, ok = QInputDialog.getText(
+                None, "Securonis Notes - Confirm Password", 
+                "Confirm encryption password:", 
+                QLineEdit.Password
+            )
+            
+            if not ok or password != confirm:
+                QMessageBox.warning(None, "Warning", "Passwords don't match.")
+                return False
+                
+            try:
+                # Simple key derivation from password
+                key_bytes = hashlib.sha256(password.encode()).digest()
+                # Create and store key
+                global_encryption_key = base64.urlsafe_b64encode(key_bytes)
+                
+                # Save key hash for future verification
+                with open(key_file, 'wb') as f:
+                    # Store a hash of the key, not the key itself
+                    key_hash = hashlib.sha256(global_encryption_key).digest()
+                    f.write(key_hash)
+                    
+                return True
+                
+            except Exception as e:
+                print(f"Key creation error: {str(e)}")
+                return False
+                
+    except Exception as e:
+        print(f"Validation error: {str(e)}")
+        return False
+    
+    return False
+
+
+global_encryption_key = None
+
 def main():
     app = QApplication(sys.argv)
     
+
     sys.excepthook = handle_exception
     
     # Set application style
@@ -2434,18 +2813,19 @@ def main():
     palette.setColor(QPalette.HighlightedText, Qt.black)
     app.setPalette(palette)
     
-
+    # Set application font
     app.setFont(QFont("Segoe UI", 9))
     
     try:
+
         window = MainWindow()
         window.show()
         sys.exit(app.exec_())
     except Exception as e:
- 
+  
         QMessageBox.critical(None, "Critical Error", 
                            f"A critical error occurred during startup:\n\n{str(e)}\n\nThe application will now exit.")
-
+       
         try:
             with open('critical_error.log', 'a') as f:
                 import datetime
